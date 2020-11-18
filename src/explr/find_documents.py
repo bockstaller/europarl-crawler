@@ -1,7 +1,8 @@
+import csv
+from datetime import date, timedelta
+
 import requests
 from fake_headers import Headers
-import csv
-from datetime import timedelta, date
 
 base_url = "https://europarl.europa.eu/doceo/document/"
 filename = "urls.csv"
@@ -48,7 +49,6 @@ for term in terms:
             + "_EN"
         )
 
-
         pdf_url = document_url + ".pdf"
         html_url = document_url + ".html"
 
@@ -58,7 +58,7 @@ for term in terms:
         print(document_url)
 
         if (pdf_r.status_code == 200) or (html_r.status_code == 200):
-            print( single_date.strftime("%Y-%m-%d"))
+            print(single_date.strftime("%Y-%m-%d"))
 
             with open(filename, "a", newline="") as csvfile:
                 urlwriter = csv.writer(csvfile)
@@ -68,9 +68,9 @@ for term in terms:
                         single_date.strftime("%Y-%m-%d"),
                         pdf_url,
                         pdf_r.status_code,
-                        pdf_r.headers.get("content-length",0),
+                        pdf_r.headers.get("content-length", 0),
                         html_url,
                         html_r.status_code,
-                        html_r.headers.get("content-length",0),
+                        html_r.headers.get("content-length", 0),
                     ]
                 )
