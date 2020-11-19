@@ -1,22 +1,26 @@
 import os
 
 import click
+from dotenv import find_dotenv, load_dotenv
 
 
 @click.group()
 def cli():
-    pass
+    """Runs setup of the europarl-cli"""
+    # .env-configuration file takes precedence over already loaded env-variables
+    load_dotenv(override=True)
 
 
 @click.command()
 @click.option(
-    "--dry-run", "-d", is_flag=True, default=False, help="dry run all operations"
+    "--dry-run",
+    "-d",
+    is_flag=True,
+    default=False,
+    help="dry run operations and output their actions",
 )
 def init(dry_run):
-    if dry_run:
-        print("dry_run")
-    print("Initialize database")
-    print("Migrate database")
+    pass
 
 
 cli.add_command(init)
