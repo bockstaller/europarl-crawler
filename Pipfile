@@ -13,6 +13,8 @@ pre-commit = "*"
 requests = "*"
 fake-headers = "*"
 datetime = "*"
+click = "*"
+setuptools = "*"
 
 [scripts]
 test = "coverage run -m unittest discover -s ./tests -p *_test.py"
