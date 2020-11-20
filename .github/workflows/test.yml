@@ -7,9 +7,9 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     steps:
-      - name: Set up Python 3.7
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -20,5 +20,7 @@ jobs:
         run: pipenv install --dev
       - name: Copy .env file
         run: cp .example.env .env
+      - name: Change directory
+        run: cd src
       - name: Run tests
         run: pipenv run test
