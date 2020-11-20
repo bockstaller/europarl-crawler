@@ -5,9 +5,9 @@ setup(
     version="0.1",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["Click", "python-dotenv"],
+    install_requires=["Click", "python-dotenv", "psycopg2"],
     entry_points="""
         [console_scripts]
-        europarl=europarl.main:cli
+        europarl=europarl.main:main
     """,
 )

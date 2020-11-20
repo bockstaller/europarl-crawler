@@ -3,65 +3,66 @@ import random
 import time
 
 import click
-from dotenv import find_dotenv, load_dotenv
+import psycopg2
+from dotenv import load_dotenv
+from europarl.db.dbinterface import DBInterface
+from europarl.db.tables import Table
 
 indent = "    "
 
 
-@click.group()
-def cli():
-    """Runs setup of the europarl-cli"""
-    # .env-configuration file takes precedence over already loaded env-variables
+def main():
     load_dotenv(override=True)
+    cli()
+
+
+@click.group()
+@click.option("--db_name", help="database name", envvar="EUROPARL_DB_NAME")
+@click.option("--db_user", help="database user", envvar="EUROPARL_DB_USER")
+@click.option("--db_password", help="database password", envvar="EUROPARL_DB_PASSWORD")
+@click.option("--db_host", help="database host", envvar="EUROPARL_DB_HOST")
+@click.option("--db_port", help="database port", envvar="EUROPARL_DB_PORT")
+@click.pass_context
+def cli(ctx, db_name, db_user, db_password, db_host, db_port):
+    """Runs setup of the europarl-cli"""
+    # ensure that ctx.obj exists and is a dict
+    ctx.ensure_object(dict)
+
+    # try to create a db connection
+    ctx.obj["DB"] = DBInterface(
+        name=db_name, user=db_user, password=db_password, host=db_host, port=db_port
+    )
 
 
 @click.command()
-@click.option(
-    "--dry-run",
-    "-d",
-    is_flag=True,
-    default=False,
-    help="dry run operations and output their actions",
-)
-def init(dry_run):
-    setup_postgres()
-    setup_redis()
+@click.pass_context
+def init(ctx):
+    db = ctx.obj["DB"]
+
+    click.secho("Postgres:", bold=True, underline=True)
+
+    click.echo(indent + "Checking if conncection is valid: ", nl=False)
+    if db.check_connection():
+        click.echo("✅")
+    else:
+        click.echo("❌")
+
+    click.echo(indent + "Checking if table structure is available: ")
+
+    for table in db.tables:
+        click.secho(indent + str(table.__name__) + ":", bold=True)
+        instance = table(ctx.obj["DB"])
+
+        click.echo(indent + "Does the table exist: ", nl=False)
+        if instance.table_exists() is True:
+            click.echo("✅")
+        else:
+            click.echo("💬")
+            click.echo(indent + "Creating table: ", nl=False)
+            if instance.create_table():
+                click.echo("✅")
+            else:
+                click.echo("❌")
 
 
 cli.add_command(init)
-
-
-def setup_postgres():
-    click.secho("Postgres:", bold=True, underline=True)
-    check_pg_connection()
-    check_table_structure()
-    create_table_structure()
-
-
-def check_pg_connection():
-    click.echo(indent + "Connection: ", nl=False)
-    time.sleep(random.random())
-    click.echo("✅")
-
-
-def check_table_structure():
-    click.echo(indent + "Table structure available: ", nl=False)
-    time.sleep(random.random())
-    click.echo("❌")
-
-
-def create_table_structure():
-    click.echo(indent + "Table structure created: ", nl=False)
-    time.sleep(random.random())
-    click.echo("✅")
-
-
-def setup_redis():
-    click.secho("Redis:", bold=True, underline=True)
-    check_redis_connection()
-
-
-def check_redis_connection():
-    click.echo(indent + "Connection: ", nl=False)
-    time.sleep(random.random())
-    click.echo("✅")
