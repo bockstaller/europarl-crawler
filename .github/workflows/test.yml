@@ -20,7 +20,5 @@ jobs:
         run: pipenv install --dev
       - name: Copy .env file
         run: cp .example.env .env
-      - name: Change directory
-        run: cd src
       - name: Run tests
-        run: pipenv run test
+        run: cd src && pipenv run test
