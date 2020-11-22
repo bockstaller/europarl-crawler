@@ -7,6 +7,9 @@ verify_ssl = true
 flake8 = "*"
 autopep8 = "*"
 coverage = "*"
+sphinx = "*"
+recommonmark = "*"
+sphinxcontrib-napoleon = "*"
 
 [packages]
 pre-commit = "*"
@@ -19,7 +22,6 @@ python-dotenv = "*"
 colorama = "*"
 psycopg2-binary = "*"
 pytest = "*"
-
 
 [scripts]
 test = "python -m pytest ."

@@ -45,5 +45,6 @@
         "editor.codeActionsOnSave": {
             "source.organizeImports": true
         }
-    }
+    },
+    "restructuredtext.confPath": "${workspaceFolder}/source"
 }

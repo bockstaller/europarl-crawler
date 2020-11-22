@@ -1,6 +1,4 @@
-# Überblick über mögliche Quellen für EU Dokumente
-
-{{TOC}}
+# Datenquellen
 
 ## Definitionen
 
