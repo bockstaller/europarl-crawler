@@ -8,6 +8,11 @@ from .tables import Table
 
 
 def get_all_subclasses(cls):
+    """Get all subclasses and sub-sub-...-classes of a class
+
+    Returns:
+        list: List containing all sub-classes
+    """
     all_subclasses = []
 
     for subclass in cls.__subclasses__():
@@ -19,22 +24,41 @@ def get_all_subclasses(cls):
 
 class DBInterface:
     """
-    docstring
+    Manages the db-connection.
+    - stores connection details
+    - tests the connection
+    - implements a custom context manager
     """
 
     tables = get_all_subclasses(Table)
 
-    def __init__(self, name, user, password, host, port):
+    def __init__(self, name, user, password, host="localhost", port=5432):
+        """Creates a DBInterface instance
+        Stores the connection details in the instance and
+        exists.
+        Doesn't test the connection
+
+        Args:
+            name string: name of the db
+            user string: name of the db user
+            password string: passwort for the db user
+            host string: hostname/adress to connect to
+            port number: host port to connect to
+        """
         self.name = name
         self.user = user
         self.password = password
         self.host = host
         self.port = port
-        pass
 
     def check_connection(self):
+        """Tests if a connection to the db is possible
+
+        Returns:
+            boolean: returns True if a connection to the db can be established
+        """
         try:
-            con = self.db_connection()
+            con = self.connect()
             con.close()
             return True
         except Exception:
@@ -42,7 +66,12 @@ class DBInterface:
         finally:
             con.close()
 
-    def db_connection(self):
+    def connect(self):
+        """Creates a db connection
+
+        Returns:
+            psycopg2.connection: returns a psycopg2-connection-instance
+        """
         return psycopg2.connect(
             dbname=self.name,
             user=self.user,
@@ -52,9 +81,16 @@ class DBInterface:
         )
 
     @contextmanager
-    def cursor(self, *args, **kwds):
-        # Code to acquire resource, e.g.:
-        connection = self.db_connection()
+    def cursor(self, *args, **kwargs):
+        """Context manager which returns a namespace consisting out of a
+        psycopg2 connection and cursor object.
+        Both can be accessed via dot-notation
+
+        Yields:
+            "cursor"-namespace : Namespace with the elements "con" and "cur"
+        """
+        # Code to acquire the db connection
+        connection = self.connect()
         cursor = connection.cursor()
 
         db = {"con": connection, "cur": cursor}
@@ -63,7 +99,7 @@ class DBInterface:
         try:
             yield db
         finally:
-            # Code to release resource, e.g.:
+            # Code to release the db connection
             connection.commit()
             cursor.close()
             connection.close()
