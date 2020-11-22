@@ -5,7 +5,7 @@ import time
 import click
 import psycopg2
 from dotenv import load_dotenv
-from europarl.db.dbinterface import DBInterface
+from europarl.db.interface import DBInterface
 from europarl.db.tables import Table
 
 indent = "    "

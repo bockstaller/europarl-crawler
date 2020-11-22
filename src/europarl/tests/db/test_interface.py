@@ -1,5 +1,5 @@
 import pytest
-from europarl.db.dbinterface import get_all_subclasses
+from europarl.db.interface import get_all_subclasses
 
 
 def test_get_all_subclasses():
