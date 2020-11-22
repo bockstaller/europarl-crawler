@@ -57,15 +57,3 @@ class SessionDay(Table):
                             checked_at time without time zone,
                             PRIMARY KEY(date)
                           );"""
-
-
-class Test(SessionDay):
-    table_name = "Test"
-
-
-class Test1(SessionDay):
-    table_name = "Test1"
-
-
-class Test2(SessionDay):
-    table_name = "Test2"
