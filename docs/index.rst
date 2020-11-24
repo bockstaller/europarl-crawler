@@ -2,17 +2,10 @@ Welcome to europarl's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   general/datasources.md
-
-.. automodule:: europarl.db.interface
-   :members:
-   :undoc-members:
-
-.. automodule:: europarl.db.tables
-   :members:
-   :undoc-members:
+   general/datasources
+   code/database
 
 
 
