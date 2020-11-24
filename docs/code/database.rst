@@ -2,22 +2,8 @@
 Database
 --------
 
-DB-Interface
-^^^^^^^^^^^^
-
-.. autoclass:: europarl.db.interface
-    :members:
-
-
-Tables
-^^^^^^
-
-Tables
-""""""
-
-.. autoclass:: europarl.db.tables.Table
-    :members:
-
+Database tables
+^^^^^^^^^^^^^^^
 
 SessionDay
 """"""""""
@@ -38,6 +24,15 @@ This table is mainly populated by url generators which create urls to crawl by f
 .. autoclass:: europarl.db.tables.URLs
     :members:
 
+Tables
+""""""
+
+.. autoclass:: europarl.db.tables.Table
+    :members:
 
 
+DB-Interface
+^^^^^^^^^^^^
 
+.. autoclass:: europarl.db.interface.DBInterface
+    :members:

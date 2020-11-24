@@ -71,8 +71,6 @@ class SessionDay(Table):
     Models the days the parliament met
 
     Attributes:
-    -----------
-
         date : date
             the date of a possible session
         hit : boolean
@@ -102,7 +100,6 @@ class URLs(Table):
 
 
     Attributes:
-    -----------
 
         rule : VARCHAR(100)
             name of the rule used to generate the URL
