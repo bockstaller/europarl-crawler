@@ -19,7 +19,7 @@ python-dotenv = "*"
 colorama = "*"
 psycopg2-binary = "*"
 pytest = "*"
-
+requests-futures = "*"
 
 [scripts]
 test = "python -m pytest ."
