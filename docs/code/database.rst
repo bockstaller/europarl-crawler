@@ -1,9 +1,6 @@
 
 Database
---------
-
-Database tables
-^^^^^^^^^^^^^^^
+^^^^^^^^
 
 SessionDay
 """"""""""

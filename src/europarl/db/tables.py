@@ -8,7 +8,7 @@ from psycopg2 import sql
 
 class Table(ABC):
     """
-    Baseclass implementing common table functions
+    Abstract baseclass implementing common table functions
 
 
     """

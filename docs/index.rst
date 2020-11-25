@@ -8,9 +8,6 @@ Welcome to europarl's documentation!
    code/database
    general/datasources
 
-Overview
---------
-
 The main design-goals for this crawler are:
 
 **Niceness**
@@ -26,6 +23,11 @@ The main design-goals for this crawler are:
 **Concurrency**
    Crawling is a io-heavy workload -- core tasks of the crawler should run in simultaniously, slow tasks should be parallelized
 
+
+Overview
+--------
+
+.. image:: images/overview.png
 
 
 .. include:: code/processes.rst
