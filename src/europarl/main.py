@@ -1,68 +1,79 @@
-import os
+import logging
+import multiprocessing
 import random
+import socket
+import sys
 import time
+from queue import Full
 
-import click
-import psycopg2
-from dotenv import load_dotenv
-from europarl.db.interface import DBInterface
-from europarl.db.tables import Table
+from europarl.mptools import (
+    EventMessage,
+    MainContext,
+    ProcWorker,
+    QueueProcWorker,
+    TimerProcWorker,
+    default_signal_handler,
+    init_signals,
+)
 
-indent = "    "
+DEFAULT_POLLING_TIMEOUT = 0.1
+MAX_SLEEP_SECS = 0.02
+
+
+class TokenBucketWorker(TimerProcWorker):
+    INTERVAL_SECS = 0.01
+
+    token_nr = 0
+
+    def init_args(self, args):
+        (self.token_bucket_q,) = args
+
+    def main_func(self):
+        """
+        Creates tokens for the crawlers.
+        The token-string carries no meaning and is only intended for debugging purposes.
+        The continous creating, waiting and discarding loop in case of a full token_bucket_q keeps the process responsive to shutdown signals which are handled in the base calass TimerProcWorker.
+        """
+
+        token = "{}:{:04d}".format(self.name, self.token_nr)
+        self.logger.debug("Created token: {}".format(token))
+
+        self.logger.debug("Enqueing token: {}".format(token))
+
+        try:
+            self.token_bucket_q.put(token, timeout=DEFAULT_POLLING_TIMEOUT)
+            self.logger.info("Enqueued token: {}".format(token))
+        except Full:
+            self.logger.debug("Queue full. - Discarding token: {}".format(token))
+            return
+
+        if self.token_nr >= 1000:
+            self.token_nr = 0
+            self.logger.debug("Token number overflow. Reseted to 0")
+        else:
+            self.token_nr += 1
+            self.logger.debug("Incremented token number to {}".format(self.token_nr))
+
+
+def request_handler(event, reply_q, main_ctx):
+    main_ctx.logger.log(logging.DEBUG, f"request_handler - '{event.msg}'")
 
 
 def main():
-    load_dotenv(override=True)
-    cli()
+    with MainContext() as main_ctx:
+        init_signals(
+            main_ctx.shutdown_event, default_signal_handler, default_signal_handler
+        )
+
+        token_bucket_q = main_ctx.MPQueue(200)
+
+        main_ctx.Proc("TOKEN_GEN0", TokenBucketWorker, token_bucket_q)
+
+        while not main_ctx.shutdown_event.is_set():
+            event = main_ctx.event_queue.safe_get()
+            if not event:
+                continue
 
 
-@click.group()
-@click.option("--db_name", help="database name", envvar="EUROPARL_DB_NAME")
-@click.option("--db_user", help="database user", envvar="EUROPARL_DB_USER")
-@click.option("--db_password", help="database password", envvar="EUROPARL_DB_PASSWORD")
-@click.option("--db_host", help="database host", envvar="EUROPARL_DB_HOST")
-@click.option("--db_port", help="database port", envvar="EUROPARL_DB_PORT")
-@click.pass_context
-def cli(ctx, db_name, db_user, db_password, db_host, db_port):
-    """Runs setup of the europarl-cli"""
-    # ensure that ctx.obj exists and is a dict
-    ctx.ensure_object(dict)
-
-    # try to create a db connection
-    ctx.obj["DB"] = DBInterface(
-        name=db_name, user=db_user, password=db_password, host=db_host, port=db_port
-    )
-
-
-@click.command()
-@click.pass_context
-def init(ctx):
-    db = ctx.obj["DB"]
-
-    click.secho("Postgres:", bold=True, underline=True)
-
-    click.echo(indent + "Checking if conncection is valid: ", nl=False)
-    if db.check_connection():
-        click.echo("✅")
-    else:
-        click.echo("❌")
-
-    click.echo(indent + "Checking if table structure is available: ")
-
-    for table in db.tables:
-        click.secho(indent + str(table.__name__) + ":", bold=True)
-        instance = table(ctx.obj["DB"])
-
-        click.echo(indent + "Does the table exist: ", nl=False)
-        if instance.table_exists() is True:
-            click.echo("✅")
-        else:
-            click.echo("💬")
-            click.echo(indent + "Creating table: ", nl=False)
-            if instance.create_table():
-                click.echo("✅")
-            else:
-                click.echo("❌")
-
-
-cli.add_command(init)
+if __name__ == "__main__":
+    main()
