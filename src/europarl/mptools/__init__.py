@@ -8,16 +8,16 @@ from mptools._mptools import (
     SignalObject,
     TerminateInterrupt,
     TimerProcWorker,
-    _logger,
     _sleep_secs,
     default_signal_handler,
     init_signal,
     init_signals,
     proc_worker_wrapper,
+    setup_logging,
 )
 
 __all__ = [
-    "_logger",
+    "setup_logging",
     "MPQueue",
     "_sleep_secs",
     "SignalObject",

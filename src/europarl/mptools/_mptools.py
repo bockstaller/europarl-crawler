@@ -15,19 +15,18 @@ from queue import Empty, Full
 DEFAULT_POLLING_TIMEOUT = 0.02
 MAX_SLEEP_SECS = 0.02
 
-start_time = time.monotonic()
 
+def setup_logging(logger_q, name):
+    logger = logging.getLogger(name)
 
-def _logger(logger_q, name, level, msg, exc_info=None):
-    elapsed = time.monotonic() - start_time
-    hours = int(elapsed // 60)
-    seconds = elapsed - (hours * 60)
+    if not logger.hasHandlers():
+        h = logging.handlers.QueueHandler(logger_q)
+        f = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+        h.setFormatter(f)
+        logger.addHandler(h)
+        logger.setLevel(logging.DEBUG)
 
-    logger_q.log(
-        level,
-        f"{hours:3}:{seconds:06.3f} {logging.getLevelName(level)} {name:20} {msg}",
-        exc_info=exc_info,
-    )
+    return logger
 
 
 # -- Queue handling support
@@ -140,12 +139,7 @@ class ProcWorker:
         self.event_q = event_q
         self.terminate_called = 0
 
-        self.logger = logging.getLogger(__name__)
-
-        if not self.logger.hasHandlers():
-            h = logging.handlers.QueueHandler(logger_q)
-            self.logger.addHandler(h)
-            self.logger.setLevel(logging.DEBUG)
+        self.logger = setup_logging(logger_q, name=name)
 
         self.init_args(args)
 
@@ -262,12 +256,7 @@ class Proc:
         self.shutdown_event = shutdown_event
         self.startup_event = mp.Event()
 
-        self.logger = logging.getLogger(__name__)
-
-        if not self.logger.hasHandlers():
-            h = logging.handlers.QueueHandler(logger_q)
-            self.logger.addHandler(h)
-            self.logger.setLevel(logging.DEBUG)
+        self.logger = setup_logging(logger_q, name=name)
 
         self.proc = mp.Process(
             target=proc_worker_wrapper,
@@ -338,12 +327,7 @@ class MainContext:
         queue_handler = QueueHandler(self.logger_q)
         queue_handler.setLevel(logging.DEBUG)
 
-        self.logger = logging.getLogger(__name__)
-
-        if not self.logger.hasHandlers():
-            h = logging.handlers.QueueHandler(self.logger_q)
-            self.logger.addHandler(h)
-            self.logger.setLevel(logging.DEBUG)
+        self.logger = setup_logging(self.logger_q, name="MAIN")
 
         handler = logging.StreamHandler()
         handler.setLevel(logging.DEBUG)
