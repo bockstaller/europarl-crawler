@@ -10,6 +10,7 @@ coverage = "*"
 sphinx = "*"
 recommonmark = "*"
 sphinxcontrib-napoleon = "*"
+black = "*"
 
 [packages]
 pre-commit = "*"
@@ -31,3 +32,6 @@ main = "python ./src/main.py"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
