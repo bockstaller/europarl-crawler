@@ -11,7 +11,7 @@ import time
 
 import europarl.mptools as mptools
 import pytest
-from europarl.mptools._mptools import (
+from europarl.mptools import (
     MainContext,
     MPQueue,
     Proc,
@@ -20,11 +20,11 @@ from europarl.mptools._mptools import (
     SignalObject,
     TerminateInterrupt,
     TimerProcWorker,
-    _logger,
     _sleep_secs,
     default_signal_handler,
     init_signal,
     proc_worker_wrapper,
+    setup_logging,
 )
 
 

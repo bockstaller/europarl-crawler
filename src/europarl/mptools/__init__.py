@@ -1,4 +1,4 @@
-from mptools._mptools import (
+from ._mptools import (
     EventMessage,
     MainContext,
     MPQueue,
