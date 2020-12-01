@@ -1,3 +1,4 @@
+import datetime
 from abc import ABC
 from contextlib import contextmanager
 from types import SimpleNamespace
@@ -89,12 +90,49 @@ class SessionDay(Table):
     table_name = "session_days"
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id integer NOT NULL,
-                            date date NOT NULL,
+                            dates date NOT NULL,
                             hit boolean NOT NULL,
                             urls_created boolean NOT NULL,
                             urls_created_ts datetime,
                             PRIMARY KEY(id)
                           );"""
+
+    def get_unchecked_days(self, limit, offset=30):
+        query = """ SELECT 	s.days
+                    FROM(
+                        SELECT days::date
+                        FROM   generate_series(timestamp '1994-01-01'
+                                        , timestamp %s
+                                        , interval  '1 day')AS days
+                        ) s
+                    FULL OUTER JOIN session_days on session_days.dates = s.days::date
+                    WHERE session_days.checked is Null or session_days.checked = False
+                    ORDER by s.days desc
+                    LIMIT %s;"""
+
+        date = datetime.date.today() - datetime.timedelta(days=offset)
+
+        with self.db.cursor() as db:
+            db.cur.execute(query, [date, limit])
+            data = [row[0] for row in db.cur.fetchall()]
+            return data
+
+    def update_day(self, date, hit):
+        query = """ INSERT INTO session_days(dates, hit, checked, checked_at)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (dates)
+                    DO
+                        UPDATE SET hit = %s, checked = %s, checked_at = %s
+                        WHERE session_days.dates = %s
+                """
+
+        checked = True
+        checked_at = datetime.datetime.now()
+
+        with self.db.cursor() as db:
+            return db.cur.execute(
+                query, [date, hit, checked, checked_at, hit, checked, checked_at, date]
+            )
 
 
 class URLs(Table):
