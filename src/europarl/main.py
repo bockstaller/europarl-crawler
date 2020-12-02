@@ -102,6 +102,7 @@ class SessionDayChecker(QueueProcWorker):
         for key, term in self.terms.items():
             if term[0] < date < term[1]:
                 return key
+        return "0"
 
     def main_func(self, token):
         try:
