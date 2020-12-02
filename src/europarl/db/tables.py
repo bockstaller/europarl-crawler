@@ -117,7 +117,7 @@ class SessionDay(Table):
             data = [row[0] for row in db.cur.fetchall()]
             return data
 
-    def update_day(self, date, hit):
+    def update_day(self, date, hit, checked):
         query = """ INSERT INTO session_days(dates, hit, checked, checked_at)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (dates)
@@ -126,7 +126,7 @@ class SessionDay(Table):
                         WHERE session_days.dates = %s
                 """
 
-        checked = True
+        checked = checked
         checked_at = datetime.datetime.now()
 
         with self.db.cursor() as db:

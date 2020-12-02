@@ -134,7 +134,7 @@ class SessionDayChecker(QueueProcWorker):
 
         try:
             self.logger.debug("Storing result")
-            self.sessionDay.update_day(date, hit)
+            self.sessionDay.update_day(date, hit, True)
             self.logger.info("Stored result. Date: {}; Hit: {};".format(date, hit))
         except Exception:
             self.logger.error("Couldn't store result for date: {}".format(date))
