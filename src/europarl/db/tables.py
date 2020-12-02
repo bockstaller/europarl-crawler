@@ -14,6 +14,8 @@ class Table(ABC):
 
     """
 
+    # TODO: Add Tests
+
     def __init__(self, DBInterface):
         """Creates a new instance of the table class
 
@@ -85,6 +87,8 @@ class SessionDay(Table):
             When did a url generator derive urls from the date
 
     """
+
+    # TODO: Add Tests
 
     schema = "public"
     table_name = "session_days"

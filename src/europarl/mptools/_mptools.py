@@ -29,6 +29,10 @@ def setup_logging(logger_q, name):
     return logger
 
 
+# TODO: Mitigate hard crashing processes by restarting them
+# TODO:
+
+
 # -- Queue handling support
 class MPQueue(mpq.Queue):
 

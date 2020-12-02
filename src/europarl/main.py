@@ -67,6 +67,13 @@ class TokenBucketWorker(TimerProcWorker):
 
 
 class SessionDayChecker(QueueProcWorker):
+    # TODO: Explicitly handle 200s, 404s and other errors and store these results in the db
+    # TODO: Handle no work left case
+    # TODO: Improve logging
+    # TODO: break main_func into smaller functions
+    # TODO: add tests
+    # TODO: document
+
     BASE_URL = "https://europarl.europa.eu/doceo/document/"
     PREFETCH_LIMIT = 100
     dates_to_check = []
@@ -142,6 +149,7 @@ class SessionDayChecker(QueueProcWorker):
 
 
 def main():
+    # TODO: configure Loglevel with .env
 
     load_dotenv(override=True)
 
