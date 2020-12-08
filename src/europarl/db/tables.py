@@ -15,8 +15,6 @@ class Table(ABC):
 
     """
 
-    # TODO: Add Tests
-
     def __init__(self, DBInterface):
         """Creates a new instance of the table class
 

@@ -31,8 +31,6 @@ class DBInterface:
     - implements a custom context manager
     """
 
-    # TODO: Don't create connections in the cursor context manager. This creates shortlifed postgres connections
-
     tables = get_all_subclasses(Table)
 
     def __init__(self, name, user, password, host="localhost", port=5432):
