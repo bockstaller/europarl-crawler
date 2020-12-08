@@ -9,7 +9,8 @@
     "files.exclude": {
         "**/__pycache__": true,
         "LICENSE": true,
-        ".coverage": true
+        ".coverage": true,
+        "**/europarl.egg-info": true
     },
     "[markdown]": {
         "editor.formatOnSave": true,
