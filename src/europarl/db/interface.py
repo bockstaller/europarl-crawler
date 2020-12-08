@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import psycopg2
 from psycopg2 import sql
+from psycopg2.extras import RealDictCursor
 
 from .tables import Table
 

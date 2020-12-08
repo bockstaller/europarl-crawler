@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from types import SimpleNamespace
 
 import psycopg2
+import pytz
 from psycopg2 import sql
 
 
@@ -74,10 +75,14 @@ class SessionDay(Table):
     A job deriving all possible URLs from the date can then sort by the hit-property and create them. The creation status is tracked in urls_created and urls_created_date.
 
     Attributes:
-        date : date
+        dates : date
             the date of a possible session
         hit : boolean
             did HEAD-ing a generated result not return a 404
+        checked: boolean not null defaults false
+            was this url checked
+        checked_at: timestamp utc
+            when was this url last checked
         urls_created : boolean
             True if a url generator has already derived urls from the date
         urls_created_ts: datetime
@@ -85,19 +90,18 @@ class SessionDay(Table):
 
     """
 
-    # TODO: Add Tests
-
     schema = "public"
     table_name = "session_days"
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
-                            id integer NOT NULL,
+                            id SERIAL,
                             dates date NOT NULL,
-                            hit boolean NOT NULL,
-                            checked boolean NOT NULL,
+                            hit boolean NOT NULL DEFAULT false,
+                            checked boolean NOT NULL DEFAULT false,
                             checked_at time with time zone,
-                            urls_created boolean NOT NULL,
-                            urls_created_ts time with time zone,
-                            PRIMARY KEY(id)
+                            urls_created boolean NOT NULL DEFAULT false,
+                            urls_created_at time with time zone,
+                            CONSTRAINT session_days_pkey PRIMARY KEY (id),
+                            CONSTRAINT date_unique UNIQUE (dates)
                           );"""
 
     def get_unchecked_days(
@@ -116,13 +120,13 @@ class SessionDay(Table):
             start_date (datetime.date, optional): [description]. Defaults to datetime.date(1994, 1, 1).
 
         Returns:
-            [type]: [description]
+            [datetime.date]: List of dates with a maximum number of limit entries
         """
 
         query = """ SELECT 	s.days
                     FROM(
                         SELECT days::date
-                        FROM   generate_series(timestamp '1994-01-01'
+                        FROM   generate_series(timestamp %s
                                         , timestamp %s
                                         , interval  '1 day')AS days
                         ) s
@@ -134,26 +138,28 @@ class SessionDay(Table):
         date = datetime.date.today() - offset
 
         with self.db.cursor() as db:
-            db.cur.execute(query, [date, limit])
+            db.cur.execute(query, [start_date, date, limit])
             data = [row[0] for row in db.cur.fetchall()]
             return data
 
-    def update_day(self, date, hit, checked):
+    def update_day(self, date, hit=False, checked=False):
         query = """ INSERT INTO session_days(dates, hit, checked, checked_at)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (dates)
                     DO
                         UPDATE SET hit = %s, checked = %s, checked_at = %s
                         WHERE session_days.dates = %s
+                    RETURNING id
                 """
 
         checked = checked
-        checked_at = datetime.datetime.now()
+        checked_at = datetime.datetime.now(pytz.utc)
 
         with self.db.cursor() as db:
-            return db.cur.execute(
+            db.cur.execute(
                 query, [date, hit, checked, checked_at, hit, checked, checked_at, date]
             )
+            return db.cur.fetchone()
 
 
 class URLs(Table):
