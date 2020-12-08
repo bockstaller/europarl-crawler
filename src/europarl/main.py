@@ -154,11 +154,11 @@ def main():
     load_dotenv(override=True)
 
     db = DBInterface(
-        os.getenv("EUROPARL_DB_NAME"),
-        os.getenv("EUROPARL_DB_USER"),
-        os.getenv("EUROPARL_DB_PASSWORD"),
-        os.getenv("EUROPARL_DB_HOST"),
-        os.getenv("EUROPARL_DB_PORT"),
+        name=os.getenv("EUROPARL_DB_NAME"),
+        user=os.getenv("EUROPARL_DB_USER"),
+        password=os.getenv("EUROPARL_DB_PASSWORD"),
+        host=os.getenv("EUROPARL_DB_HOST"),
+        port=os.getenv("EUROPARL_DB_PORT"),
     )
 
     with MainContext() as main_ctx:

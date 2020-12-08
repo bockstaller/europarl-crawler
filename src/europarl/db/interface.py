@@ -52,6 +52,7 @@ class DBInterface:
         self.password = password
         self.host = host
         self.port = port
+        self.connection = None
 
     def connect(self):
         """Creates a db connection and stores it in the instance
@@ -105,6 +106,6 @@ class DBInterface:
         try:
             yield db
         finally:
-            # Code to release the db connection
+
             self.connection.commit()
             cursor.close()

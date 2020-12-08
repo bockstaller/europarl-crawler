@@ -30,17 +30,14 @@ class Table(ABC):
         Returns:
             boolean: True if the table was created successfully
         """
-        try:
-            with self.db.cursor() as db:
-                db.cur.execute(
-                    sql.SQL(self.table_definition).format(
-                        schema=sql.Identifier(self.schema),
-                        table=sql.Identifier(self.table_name),
-                    )
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                sql.SQL(self.table_definition).format(
+                    schema=sql.Identifier(self.schema),
+                    table=sql.Identifier(self.table_name),
                 )
-                return True
-        except Exception:
-            return False
+            )
 
     def table_exists(self):
         """Checks if the table exists in the database
@@ -96,12 +93,32 @@ class SessionDay(Table):
                             id integer NOT NULL,
                             dates date NOT NULL,
                             hit boolean NOT NULL,
+                            checked boolean NOT NULL,
+                            checked_at time with time zone,
                             urls_created boolean NOT NULL,
-                            urls_created_ts datetime,
+                            urls_created_ts time with time zone,
                             PRIMARY KEY(id)
                           );"""
 
-    def get_unchecked_days(self, limit, offset=30):
+    def get_unchecked_days(
+        self,
+        limit=10,
+        offset=datetime.timedelta(days=30),
+        start_date=datetime.date(1994, 1, 1),
+    ):
+        """
+        Returns all dates not stored in the table which match the offset and start_date criteria.
+        The checked time span is all days between the start_date and today-offset.
+
+        Args:
+            limit (int): Amount of days the function should return at most. Defaults to 10
+            offset (datetime.timedelta, optional): Amount off days, starting from today, that will be ignored. Defaults to 30.
+            start_date (datetime.date, optional): [description]. Defaults to datetime.date(1994, 1, 1).
+
+        Returns:
+            [type]: [description]
+        """
+
         query = """ SELECT 	s.days
                     FROM(
                         SELECT days::date
@@ -114,7 +131,7 @@ class SessionDay(Table):
                     ORDER by s.days desc
                     LIMIT %s;"""
 
-        date = datetime.date.today() - datetime.timedelta(days=offset)
+        date = datetime.date.today() - offset
 
         with self.db.cursor() as db:
             db.cur.execute(query, [date, limit])
@@ -174,17 +191,17 @@ class URLs(Table):
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id integer NOT NULL,
                             rule VARCHAR(100) NOT NULL,
-                            url TEXT NOT NULL
+                            url TEXT NOT NULL,
                             found boolean NOT NULL,
-                            created datetime NOT NULL,
+                            created time with time zone NOT NULL,
                             enqueued boolean NOT NULL,
-                            enqueued_at datetime,
+                            enqueued_at time with time zone,
                             enqueued_times integer NOT NULL,
                             crawled boolean NOT NULL,
-                            crawled_at datetime,
+                            crawled_at time with time zone,
                             failed boolean NOT NULL,
                             file_path TEXT,
                             recrawl boolean NOT NULL,
-                            recrawl_after datetime,
+                            recrawl_after time with time zone,
                             PRIMARY KEY(id)
                           );"""
