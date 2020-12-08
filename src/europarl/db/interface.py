@@ -53,34 +53,35 @@ class DBInterface:
         self.host = host
         self.port = port
 
-    def check_connection(self):
-        """Tests if a connection to the db is possible
-
-        Returns:
-            boolean: returns True if a connection to the db can be established
-        """
-        try:
-            con = self.connect()
-            con.close()
-            return True
-        except Exception:
-            return False
-        finally:
-            con.close()
-
     def connect(self):
-        """Creates a db connection
+        """Creates a db connection and stores it in the instance
+        Reopens already closed connections.
 
         Returns:
             psycopg2.connection: returns a psycopg2-connection-instance
         """
-        return psycopg2.connect(
+        if self.connection:
+            if self.connection.closed == 0:
+                # return early if we have an open connection
+                return self.connection
+
+        self.connection = psycopg2.connect(
             dbname=self.name,
             user=self.user,
             password=self.password,
             host=self.host,
             port=self.port,
         )
+        return self.connection
+
+    def __del__(self):
+        """
+        Cleans up after itself and closes the database connection
+        """
+
+        if self.connection:
+            if self.connection.closed == 0:
+                self.connection.close()
 
     @contextmanager
     def cursor(self, *args, **kwargs):
@@ -88,20 +89,22 @@ class DBInterface:
         psycopg2 connection and cursor object.
         Both can be accessed via dot-notation
 
+        This contextmanager automatically commits the changes after exiting
+        the context.
+
         Yields:
             "cursor"-namespace : Namespace with the elements "con" and "cur"
         """
         # Code to acquire the db connection
-        connection = self.connect()
-        cursor = connection.cursor()
+        self.connect()
+        cursor = self.connection.cursor()
 
-        db = {"con": connection, "cur": cursor}
+        db = {"con": self.connection, "cur": cursor}
         db = SimpleNamespace(**db)
 
         try:
             yield db
         finally:
             # Code to release the db connection
-            connection.commit()
+            self.connection.commit()
             cursor.close()
-            connection.close()
