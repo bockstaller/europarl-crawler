@@ -74,50 +74,67 @@ def test_SessionDays_get_unchecked_days(
 
 
 @pytest.mark.parametrize(
-    "date, hit, status_code, checked",
+    "date, hit, status_code, checked, generated_url, final_url",
     [
         (
             datetime.date.today() - datetime.timedelta(days=0),
             False,
             404,
             False,
+            "www.test.de",
+            "www.test1.de",
         ),
         (
             datetime.date.today() - datetime.timedelta(days=1),
             False,
             404,
             True,
+            "www.test.de",
+            "www.test1.de",
         ),
         (
             datetime.date.today() - datetime.timedelta(days=2),
             True,
             200,
             False,
+            "www.test.de",
+            "www.test1.de",
         ),
         (
             datetime.date.today() - datetime.timedelta(days=3),
             True,
             200,
             True,
+            "www.test.de",
+            "www.test1.de",
         ),
         (
             datetime.date.today() - datetime.timedelta(days=4),
             False,
             404,
             False,
+            "www.test.de",
+            "www.test1.de",
         ),
     ],
 )
-def test_SessionDays_update_day_insert(db_interface, date, hit, status_code, checked):
+def test_SessionDays_update_day_insert(
+    db_interface, date, hit, status_code, checked, generated_url, final_url
+):
     sessionDay = SessionDay(db_interface)
     id = sessionDay.update_day(
-        date=date, status_code=status_code, hit=hit, checked=checked
+        date=date,
+        status_code=status_code,
+        hit=hit,
+        checked=checked,
+        generated_url=generated_url,
+        final_url=final_url,
     )
 
     with db_interface.cursor() as db:
         db.cur.execute(
             sql.SQL(
-                "SELECT dates, hit, status_code, checked, checked_at, urls_created, urls_created_at FROM {table} WHERE id = %s"
+                "SELECT dates, hit, status_code, checked, checked_at, urls_created, urls_created_at, generated_url, final_url FROM {table} WHERE id = %s"
             ).format(table=sql.Identifier(SessionDay.table_name)),
             [
                 id,
@@ -132,12 +149,21 @@ def test_SessionDays_update_day_insert(db_interface, date, hit, status_code, che
         assert entries[0][4] is not None
         assert entries[0][5] is False
         assert entries[0][6] is None
+        assert entries[0][7] == generated_url
+        assert entries[0][8] == final_url
 
 
 def test_SessionDays_update_day_upsert(db_interface):
     sessionDay = SessionDay(db_interface)
     date = datetime.date.today()
-    id = sessionDay.update_day(date=date, status_code=200, hit=False, checked=False)
+    id = sessionDay.update_day(
+        date=date,
+        status_code=200,
+        hit=False,
+        checked=False,
+        generated_url="www.test.de",
+        final_url="www.test1.de",
+    )
 
     ts = None
 
@@ -155,7 +181,14 @@ def test_SessionDays_update_day_upsert(db_interface):
         assert date == entries[0][0]
         ts = entries[0][1]
 
-    id = sessionDay.update_day(date=date, status_code=200, hit=False, checked=False)
+    id = sessionDay.update_day(
+        date=date,
+        status_code=200,
+        hit=False,
+        checked=False,
+        generated_url="www.test.de",
+        final_url="www.test1.de",
+    )
     with db_interface.cursor() as db:
         db.cur.execute(
             sql.SQL("SELECT dates, checked_at FROM {table} WHERE id = %s").format(
