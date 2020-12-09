@@ -1,6 +1,6 @@
 
-Processes
-^^^^^^^^^
+Workers
+^^^^^^^
 
 TokenBucket
 """""""""""
@@ -10,10 +10,17 @@ We try to be nice citizens and crawl the website of the european parliament resp
 This queue is consumed by every crawler-instance individually. The crawler then blocks the execution until it was able to obtain one of these tokens.
 It is therefore possible to rate limit all crawling functions by adjusting the token production rate.
 
+.. autoclass:: europarl.workers.TokenBucketWorker
+    :members:
+
+
 SessionPoller
 """""""""""""
 
 This process determines all dates of parliamentary sessions by querying the parliaments website for a protocol. The resulting information is stored in the SessionDay table.
+
+.. autoclass:: europarl.workers.SessionDayChecker
+    :members:
 
 DateURLGenerator
 """"""""""""""""

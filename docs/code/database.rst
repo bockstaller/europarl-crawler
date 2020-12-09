@@ -5,25 +5,25 @@ Database
 SessionDay
 """"""""""
 
-.. autoclass:: europarl.db.tables.SessionDay
+.. autoclass:: europarl.db.SessionDay
     :members:
 
 
 URLs
 """"
 
-.. autoclass:: europarl.db.tables.URLs
+.. autoclass:: europarl.db.URLs
     :members:
 
 Tables
 """"""
 
-.. autoclass:: europarl.db.tables.Table
+.. autoclass:: europarl.db.Table
     :members:
 
 
 DB-Interface
 ^^^^^^^^^^^^
 
-.. autoclass:: europarl.db.interface.DBInterface
+.. autoclass:: europarl.db.DBInterface
     :members:

@@ -4,7 +4,7 @@ Welcome to europarl's documentation!
 .. toctree::
    :maxdepth: 2
 
-   code/processes
+   code/workers
    code/database
    general/datasources
 
@@ -30,7 +30,7 @@ Overview
 .. image:: images/overview.png
 
 
-.. include:: code/processes.rst
+.. include:: code/workers.rst
 .. include:: code/database.rst
 
 Reference Material
