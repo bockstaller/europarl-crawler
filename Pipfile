@@ -31,7 +31,7 @@ report = "coverage html"
 main = "python ./src/main.py"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
 
 [pipenv]
 allow_prereleases = true
