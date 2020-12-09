@@ -1,10 +1,10 @@
 import datetime
 from abc import ABC
 from contextlib import contextmanager
+from datetime import timezone
 from types import SimpleNamespace
 
 import psycopg2
-import pytz
 from psycopg2 import sql
 
 
@@ -154,7 +154,7 @@ class SessionDay(Table):
                 """
 
         checked = checked
-        checked_at = datetime.datetime.now(pytz.utc)
+        checked_at = datetime.datetime.now(tz=timezone.utc)
 
         with self.db.cursor() as db:
             db.cur.execute(
