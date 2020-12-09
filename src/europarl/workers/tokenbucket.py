@@ -1,6 +1,5 @@
 from queue import Full
 
-from europarl.main import DEFAULT_POLLING_TIMEOUT
 from europarl.mptools import TimerProcWorker
 
 
@@ -10,7 +9,8 @@ class TokenBucketWorker(TimerProcWorker):
 
     """
 
-    INTERVAL_SECS = 0.01
+    INTERVAL_SECS = 0.2
+    DEFAULT_POLLING_TIMEOUT = 0.1
 
     token_nr = 0
 
@@ -29,7 +29,7 @@ class TokenBucketWorker(TimerProcWorker):
         self.logger.debug("Enqueing token: {}".format(token))
 
         try:
-            self.token_bucket_q.put(token, timeout=DEFAULT_POLLING_TIMEOUT)
+            self.token_bucket_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
             self.logger.info("Enqueued token: {}".format(token))
         except Full:
             self.logger.debug("Queue full. - Discarding token: {}".format(token))
