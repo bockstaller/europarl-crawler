@@ -39,6 +39,11 @@ def template_database_setup(request):
     with temp_db.cursor() as db:
         db.con.autocommit = True
         db.cur.execute(
+            SQL("drop database if exists {db_name};").format(
+                db_name=Identifier(TESTDB_TEMPLATE)
+            )
+        )
+        db.cur.execute(
             SQL("create database {db_name};").format(
                 db_name=Identifier(TESTDB_TEMPLATE)
             )
@@ -92,6 +97,9 @@ def db_interface(template_database_setup, request):
     with template_db.cursor() as db:
         db.con.autocommit = True
         db.cur.execute(
+            SQL("drop database if exists {db_name};").format(db_name=Identifier(TESTDB))
+        )
+        db.cur.execute(
             SQL("create database {db_name} with template {template};").format(
                 db_name=Identifier(TESTDB), template=Identifier(TESTDB_TEMPLATE)
             )
@@ -106,7 +114,7 @@ def db_interface(template_database_setup, request):
     )
 
     def fin():
-        db_connection.connection.close()
+        db_connection.close()
         with template_db.cursor() as db:
             db.cur.execute(
                 SQL("drop database {db_name};").format(db_name=Identifier(TESTDB))
