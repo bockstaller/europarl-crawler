@@ -11,8 +11,7 @@ from queue import Full
 
 import requests
 from dotenv import load_dotenv
-from europarl.db.interface import DBInterface
-from europarl.db.tables import SessionDay
+from europarl.db import DBInterface, SessionDay
 from europarl.mptools import (
     EventMessage,
     MainContext,

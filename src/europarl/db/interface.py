@@ -3,24 +3,6 @@ from types import SimpleNamespace
 
 import psycopg2
 from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
-
-from .tables import Table
-
-
-def get_all_subclasses(cls):
-    """Get all subclasses and sub-sub-...-classes of a class
-
-    Returns:
-        list: List containing all sub-classes
-    """
-    all_subclasses = []
-
-    for subclass in cls.__subclasses__():
-        all_subclasses.append(subclass)
-        all_subclasses.extend(get_all_subclasses(subclass))
-
-    return all_subclasses
 
 
 class DBInterface:
@@ -30,8 +12,6 @@ class DBInterface:
     - tests the connection
     - implements a custom context manager
     """
-
-    tables = get_all_subclasses(Table)
 
     def __init__(self, name, user, password, host="localhost", port=5432):
         """Creates a DBInterface instance

@@ -1,7 +1,7 @@
 import datetime
 
 import pytest
-from europarl.db.tables import SessionDay
+from europarl.db import SessionDay
 from psycopg2 import sql
 
 

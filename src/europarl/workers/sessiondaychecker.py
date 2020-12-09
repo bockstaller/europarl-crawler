@@ -2,7 +2,7 @@ import logging
 from datetime import date
 
 import requests
-from europarl.db.tables import SessionDay
+from europarl.db import SessionDay
 from europarl.mptools import QueueProcWorker
 
 

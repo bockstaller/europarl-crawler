@@ -2,7 +2,7 @@ import os
 
 import pytest
 from dotenv import load_dotenv
-from europarl.db.interface import DBInterface
+from europarl.db import DBInterface, tables
 from psycopg2.sql import SQL, Identifier
 
 TESTDB = "TEST_europarl_crawler"
@@ -52,7 +52,7 @@ def template_database_setup(request):
         port=os.getenv("EUROPARL_DB_PORT"),
     )
 
-    for table in template_db.tables:
+    for table in tables:
         table_inst = table(template_db)
         table_inst.create_table()
 
