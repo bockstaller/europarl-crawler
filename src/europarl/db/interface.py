@@ -61,6 +61,7 @@ class DBInterface:
         if self.connection:
             if self.connection.closed == 0:
                 self.connection.close()
+                self.connection = None
 
     def __del__(self):
         """

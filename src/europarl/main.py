@@ -11,7 +11,7 @@ from queue import Full
 
 import requests
 from dotenv import load_dotenv
-from europarl.db import DBInterface, SessionDay
+from europarl.db import DBInterface, SessionDay, tables
 from europarl.mptools import (
     EventMessage,
     MainContext,
@@ -24,11 +24,13 @@ from europarl.mptools import (
 from europarl.workers import SessionDayChecker, TokenBucketWorker
 
 DEFAULT_POLLING_TIMEOUT = 0.1
+TOKENS_PER_SECOND = 5
 MAX_SLEEP_SECS = 0.02
 
 
 def main():
     # TODO: configure Loglevel with .env
+    # TODO: create tables if non-existend
 
     load_dotenv(override=True)
 
@@ -39,6 +41,14 @@ def main():
         host=os.getenv("EUROPARL_DB_HOST"),
         port=os.getenv("EUROPARL_DB_PORT"),
     )
+
+    for table in tables:
+        table_inst = table(db)
+        if not table_inst.table_exists():
+            table_inst.create_table()
+        del table_inst
+
+    db.close()
 
     with MainContext() as main_ctx:
         init_signals(

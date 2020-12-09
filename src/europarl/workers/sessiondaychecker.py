@@ -38,7 +38,7 @@ class SessionDayChecker(QueueProcWorker):
         """
         self.sessionDay = SessionDay(self.db)
         self.session = requests.Session()
-        self.sleep_end = datetime.now(timezone.utz) - timedelta(year=1)
+        self.sleep_end = datetime.now(timezone.utc) - timedelta(hours=1)
 
     def shutdown(self):
         """
@@ -83,7 +83,7 @@ class SessionDayChecker(QueueProcWorker):
 
         self.logger.debug("Checking if sleep time is currently active")
         self.logger.debug("Sleep time is over at: {}".format(sleep_end))
-        if current_time > sleep_end:
+        if current_time < sleep_end:
             self.logger.debug("Current time is: {} - Aborting".format(current_time))
             return True
         self.logger.debug("Current time is: {} - Continuing".format(current_time))
@@ -104,9 +104,6 @@ class SessionDayChecker(QueueProcWorker):
                     "Database returned no value, initializing sleep: {}".format(dates)
                 )
                 self.set_sleep(timedelta(minutes=1))
-                self.logger.debug(
-                    "Set sleep_start value to: {}".format(self.sleep_start)
-                )
                 return None
 
     def crawl(self, session, date):
@@ -166,7 +163,9 @@ class SessionDayChecker(QueueProcWorker):
     def main_func(self, token):
 
         # check if function should return early because it is still sleeping
-        if self.check_for_sleep(self.sleep_start, datetime.now(timezone.utc), token):
+        if self.check_for_sleep(
+            current_time=datetime.now(timezone.utc), sleep_end=self.sleep_end
+        ):
             self.logger.debug("Returning token to bucket")
             # put "consumed token back on queue, because no crawling work was done"
             self.work_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
