@@ -17,6 +17,9 @@ class SessionDayChecker(QueueProcWorker):
     dates_to_check = []
 
     terms = {
+        "1": [date(1979, 7, 1), date(1984, 7, 31)],
+        "2": [date(1984, 7, 1), date(1989, 7, 31)],
+        "3": [date(1989, 7, 1), date(1994, 7, 31)],
         "4": [date(1994, 7, 1), date(1999, 7, 31)],
         "5": [date(1999, 7, 1), date(2004, 7, 31)],
         "6": [date(2004, 7, 1), date(2009, 7, 31)],
