@@ -1,6 +1,7 @@
 import multiprocessing as mp
 import os
 from datetime import date, datetime, timedelta, timezone
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from europarl.db.interface import DBInterface
@@ -84,3 +85,69 @@ def test_check_for_sleep(sessiondaychecker_instance, current_time, sleep_end, ex
 )
 def test_get_term(sessiondaychecker_instance, date, expected):
     assert sessiondaychecker_instance.get_term(date) == expected
+
+
+def test_get_new_date(sessiondaychecker_instance):
+    sd = sessiondaychecker_instance
+
+    days = []
+    start = date.today()
+    for i in range(10):
+        days.append(start + timedelta(days=i))
+
+    sd.dates_to_check = days
+
+    for i in range(9, 1):
+        sd.get_new_date()
+        assert len(sd.dates_to_check) == i
+
+
+def test_get_new_date_from_database_magicmock(sessiondaychecker_instance, monkeypatch):
+    sd = sessiondaychecker_instance
+    sd.PREFETCH_LIMIT = 10
+    sd.startup()
+
+    def mock_get_unchecked_days(limit):
+        days = []
+        start = date.today()
+        for i in range(limit):
+            days.append(start + timedelta(days=i))
+        return days
+
+    sd.sessionDay.get_unchecked_days = MagicMock(side_effect=mock_get_unchecked_days)
+
+    sd.dates_to_check = []
+
+    assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 0
+
+    sd.get_new_date()
+
+    assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 1
+
+    for i in reversed(range(1, 10)):
+        assert len(sd.dates_to_check) == i
+        sd.get_new_date()
+
+    assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 1
+
+    sd.get_new_date()
+
+    assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 2
+
+
+def test_get_new_date_from_database_empty_db(sessiondaychecker_instance, monkeypatch):
+    sd = sessiondaychecker_instance
+    sd.PREFETCH_LIMIT = 10
+    sd.startup()
+
+    sd.dates_to_check = []
+
+    sd.sessionDay.get_unchecked_days = MagicMock(return_value=[])
+    sd.set_sleep = Mock()
+
+    assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 0
+    sd.get_new_date()
+    assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 1
+    assert len(sd.dates_to_check) == 0
+
+    assert len(sd.set_sleep.mock_calls) == 1
