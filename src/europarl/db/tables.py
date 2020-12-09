@@ -77,6 +77,8 @@ class SessionDay(Table):
             the date of a possible session
         hit : boolean
             did HEAD-ing a generated result not return a 404
+        status_code : integer
+            returned status-code from crwaling the response
         checked: boolean not null defaults false
             was this url checked
         checked_at: timestamp utc
@@ -94,6 +96,7 @@ class SessionDay(Table):
                             id SERIAL,
                             dates date NOT NULL,
                             hit boolean NOT NULL DEFAULT false,
+                            status_code integer,
                             checked boolean NOT NULL DEFAULT false,
                             checked_at time with time zone,
                             urls_created boolean NOT NULL DEFAULT false,
@@ -140,12 +143,12 @@ class SessionDay(Table):
             data = [row[0] for row in db.cur.fetchall()]
             return data
 
-    def update_day(self, date, hit=False, checked=False):
-        query = """ INSERT INTO session_days(dates, hit, checked, checked_at)
-                    VALUES (%s, %s, %s, %s)
+    def update_day(self, date, status_code, hit=False, checked=False):
+        query = """ INSERT INTO session_days(dates, hit, status_code, checked, checked_at)
+                    VALUES (%s, %s, %s, %s, %s)
                     ON CONFLICT (dates)
                     DO
-                        UPDATE SET hit = %s, checked = %s, checked_at = %s
+                        UPDATE SET hit = %s, status_code = %s, checked = %s, checked_at = %s
                         WHERE session_days.dates = %s
                     RETURNING id
                 """
@@ -155,7 +158,19 @@ class SessionDay(Table):
 
         with self.db.cursor() as db:
             db.cur.execute(
-                query, [date, hit, checked, checked_at, hit, checked, checked_at, date]
+                query,
+                [
+                    date,
+                    hit,
+                    status_code,
+                    checked,
+                    checked_at,
+                    hit,
+                    status_code,
+                    checked,
+                    checked_at,
+                    date,
+                ],
             )
             return db.cur.fetchone()
 
