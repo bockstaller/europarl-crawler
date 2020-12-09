@@ -74,14 +74,19 @@ class DBInterface:
         )
         return self.connection
 
-    def __del__(self):
+    def close(self):
         """
-        Cleans up after itself and closes the database connection
+        Closes the database connection
         """
-
         if self.connection:
             if self.connection.closed == 0:
                 self.connection.close()
+
+    def __del__(self):
+        """
+        Cleans up after itself and closes the database connection by calling close()
+        """
+        self.close()
 
     @contextmanager
     def cursor(self, *args, **kwargs):

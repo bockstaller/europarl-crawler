@@ -23,6 +23,13 @@ class Table(ABC):
         """
         self.db = DBInterface
 
+    def __del__(self):
+        """
+        Forces destructor call of DBInterface and therefore
+        closes database connection
+        """
+        self.db.close()
+
     def create_table(self):
         """Creates the table in the database by executing it's table definition
 
