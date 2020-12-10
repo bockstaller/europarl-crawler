@@ -47,8 +47,6 @@ class SessionDay(Table):
                             final_url varchar(2000),
                             checked boolean NOT NULL DEFAULT false,
                             checked_at time with time zone,
-                            urls_created boolean NOT NULL DEFAULT false,
-                            urls_created_at time with time zone,
                             CONSTRAINT session_days_pkey PRIMARY KEY (id),
                             CONSTRAINT date_unique UNIQUE (dates)
                           );"""

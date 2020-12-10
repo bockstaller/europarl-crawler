@@ -134,7 +134,7 @@ def test_SessionDays_update_day_insert(
     with db_interface.cursor() as db:
         db.cur.execute(
             sql.SQL(
-                "SELECT dates, hit, status_code, checked, checked_at, urls_created, urls_created_at, generated_url, final_url FROM {table} WHERE id = %s"
+                "SELECT dates, hit, status_code, checked, checked_at,  generated_url, final_url FROM {table} WHERE id = %s"
             ).format(table=sql.Identifier(SessionDay.table_name)),
             [
                 id,
@@ -147,10 +147,8 @@ def test_SessionDays_update_day_insert(
         assert status_code == entries[0][2]
         assert checked == entries[0][3]
         assert entries[0][4] is not None
-        assert entries[0][5] is False
-        assert entries[0][6] is None
-        assert entries[0][7] == generated_url
-        assert entries[0][8] == final_url
+        assert entries[0][5] == generated_url
+        assert entries[0][6] == final_url
 
 
 def test_SessionDays_update_day_upsert(db_interface):
