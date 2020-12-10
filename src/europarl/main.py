@@ -21,7 +21,7 @@ from europarl.mptools import (
     default_signal_handler,
     init_signals,
 )
-from europarl.workers import SessionDayChecker, TokenBucketWorker
+from europarl.workers import DateUrlGenerator, SessionDayChecker, TokenBucketWorker
 
 DEFAULT_POLLING_TIMEOUT = 0.1
 TOKENS_PER_SECOND = 5
@@ -55,10 +55,12 @@ def main():
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
 
-        token_bucket_q = main_ctx.MPQueue(200)
+        token_bucket_q = main_ctx.MPQueue(10)
+        url_q = main_ctx.MPQueue(10)
 
         main_ctx.Proc("TOKEN_GEN_0", TokenBucketWorker, token_bucket_q)
         main_ctx.Proc("SESSION_DAY", SessionDayChecker, token_bucket_q, db)
+        main_ctx.Proc("DATE_URL_GEN", DateUrlGenerator, url_q, db)
 
         while not main_ctx.shutdown_event.is_set():
             event = main_ctx.event_queue.safe_get()
