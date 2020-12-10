@@ -1,32 +1,19 @@
 import logging
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 from europarl.db import SessionDay
 from europarl.mptools import QueueProcWorker
+from europarl.rules import Protocol
 
 
 class SessionDayChecker(QueueProcWorker):
-    # TODO: add tests
 
-    BASE_URL = "https://europarl.europa.eu/doceo/document/"
     PREFETCH_LIMIT = 100
     NO_WORK_RETRY_TIME = 0.2
     DEFAULT_POLLING_TIMEOUT = 0.2
     dates_to_check = []
-
-    terms = {
-        "1": [date(1979, 7, 1), date(1984, 7, 31)],
-        "2": [date(1984, 7, 1), date(1989, 7, 31)],
-        "3": [date(1989, 7, 1), date(1994, 7, 31)],
-        "4": [date(1994, 7, 1), date(1999, 7, 31)],
-        "5": [date(1999, 7, 1), date(2004, 7, 31)],
-        "6": [date(2004, 7, 1), date(2009, 7, 31)],
-        "7": [date(2009, 7, 1), date(2014, 7, 31)],
-        "8": [date(2014, 7, 1), date(2019, 7, 31)],
-        "9": [date(2019, 7, 1), date(2024, 7, 31)],
-    }
 
     def init_args(self, args):
         self.logger.log(logging.DEBUG, f"Entering QueueProcWorker.init_args : {args}")
@@ -50,22 +37,6 @@ class SessionDayChecker(QueueProcWorker):
         """
         self.session.close()
         del self.sessionDay
-
-    def get_term(self, date: date) -> str:
-        """
-        Matches the european parliaments election term to a given date.
-        Necessary to generate a protocol-URL
-
-        Args:
-            date (datetime.date): Date for which the term is needed
-
-        Returns:
-            str: number of the election term as a string
-        """
-        for key, term in self.terms.items():
-            if term[0] < date < term[1]:
-                return key
-        return "0"
 
     def check_for_sleep(self, current_time, sleep_end):
         """
@@ -127,15 +98,7 @@ class SessionDayChecker(QueueProcWorker):
         """
 
         # construct url to crawl
-        document_url = (
-            self.BASE_URL
-            + "PV-"
-            + self.get_term(date)
-            + "-"
-            + date.strftime("%Y-%m-%d")
-            + "_EN"
-            + ".pdf"
-        )
+        document_url = Protocol.get_url(date)
 
         self.logger.debug("Crawling url: {}".format(document_url))
         resp = self.session.head(document_url, allow_redirects=True)
