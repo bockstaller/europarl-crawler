@@ -22,6 +22,10 @@ class DateUrlGenerator(ProcWorker):
         self.derived_urls = []
         self.url = None
 
+    def shutdown(self):
+        super().shutdown()
+        self.url.drop_uncrawled_urls()
+
     def apply_rules(self, date):
         return [
             ("a", "b"),

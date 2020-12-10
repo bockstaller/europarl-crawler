@@ -34,19 +34,27 @@ class URLs(Table):
     schema = "public"
     table_name = "urls"
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
-                            id integer NOT NULL,
-                            rule VARCHAR(100) NOT NULL,
-                            url TEXT NOT NULL,
-                            found boolean NOT NULL,
-                            created time with time zone NOT NULL,
-                            enqueued boolean NOT NULL,
-                            enqueued_at time with time zone,
-                            enqueued_times integer NOT NULL,
-                            crawled boolean NOT NULL,
-                            crawled_at time with time zone,
-                            failed boolean NOT NULL,
-                            file_path TEXT,
-                            recrawl boolean NOT NULL,
-                            recrawl_after time with time zone,
-                            PRIMARY KEY(id)
+                            id SERIAL,
+                            date_id integer,
+                            rule_id integer,
+                            url text NOT NULL,
+                            CONSTRAINT urls_pkey PRIMARY KEY (id),
+                            CONSTRAINT fk_date FOREIGN KEY (date_id)
+                                REFERENCES public.session_days (id)
+                                    ON DELETE CASCADE
                           );"""
+
+    def dates_with_less_derived_urls_than(self, amount_rules, limit):
+        query = """SELECT session_days.id ,session_days.dates
+                    FROM session_days
+                    FULL OUTER JOIN urls ON session_days.id = urls.date_id
+                    GROUP BY session_days.id
+                    HAVING COUNT(urls.id) < %s
+                    ORDER BY session_days.id
+                    LIMIT %s"""
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [amount_rules, limit],
+            )
+            return db.cur.fetchone()
