@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from psycopg2 import sql
+
 from .tables import Table
 
 
@@ -93,3 +95,16 @@ class URLs(Table):
                     ],
                 )
                 url["url_id"] = db.cur.fetchone()
+
+    def drop_uncrawled_urls(self):
+        query = """ DELETE FROM {schema}.{table}
+                    WHERE crawled = false;
+                """
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                sql.SQL(query).format(
+                    schema=sql.Identifier(self.schema),
+                    table=sql.Identifier(self.table_name),
+                )
+            )
