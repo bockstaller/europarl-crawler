@@ -30,7 +30,6 @@ MAX_SLEEP_SECS = 0.02
 
 def main():
     # TODO: configure Loglevel with .env
-    # TODO: create tables if non-existend
 
     load_dotenv(override=True)
 
