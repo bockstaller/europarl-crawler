@@ -102,7 +102,7 @@ def test_get_new_date(sessiondaychecker_instance):
         assert len(sd.dates_to_check) == i
 
 
-def test_get_new_date_from_database_magicmock(sessiondaychecker_instance, monkeypatch):
+def test_get_new_date_from_database_magicmock(sessiondaychecker_instance):
     sd = sessiondaychecker_instance
     sd.PREFETCH_LIMIT = 10
     sd.startup()
@@ -135,7 +135,7 @@ def test_get_new_date_from_database_magicmock(sessiondaychecker_instance, monkey
     assert len(sd.sessionDay.get_unchecked_days.mock_calls) == 2
 
 
-def test_get_new_date_from_database_empty_db(sessiondaychecker_instance, monkeypatch):
+def test_get_new_date_from_database_empty_db(sessiondaychecker_instance):
     sd = sessiondaychecker_instance
     sd.PREFETCH_LIMIT = 10
     sd.startup()
@@ -151,3 +151,12 @@ def test_get_new_date_from_database_empty_db(sessiondaychecker_instance, monkeyp
     assert len(sd.dates_to_check) == 0
 
     assert len(sd.set_sleep.mock_calls) == 1
+
+
+def test_set_sleep(sessiondaychecker_instance):
+    sd = sessiondaychecker_instance
+    sd.startup()
+    start_sleep_end = sd.sleep_end
+    delta = timedelta(minutes=1)
+    sd.set_sleep(delta=delta)
+    assert sd.sleep_end > start_sleep_end

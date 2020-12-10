@@ -160,7 +160,7 @@ class SessionDayChecker(QueueProcWorker):
         Args:
             delta (datetime.timedelta): Time to sleep
         """
-        self.logger.debug("Setting sleep (next iteration) for: {}").format(delta)
+        self.logger.debug("Setting sleep (next iteration) for: {}".format(delta))
         self.sleep_end = datetime.now(tz=timezone.utc) + delta
 
     def main_func(self, token):
