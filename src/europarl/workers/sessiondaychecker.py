@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 from europarl.db import SessionDay
 from europarl.mptools import QueueProcWorker
-from europarl.rules import Protocol
+from europarl.rules import PdfProtocol
 
 
 class SessionDayChecker(QueueProcWorker):
@@ -98,7 +98,7 @@ class SessionDayChecker(QueueProcWorker):
         """
 
         # construct url to crawl
-        document_url = Protocol.get_url(date)
+        document_url = PdfProtocol.use_rule(date)
 
         self.logger.debug("Crawling url: {}".format(document_url))
         resp = self.session.head(document_url, allow_redirects=True)

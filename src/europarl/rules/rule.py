@@ -1,5 +1,7 @@
 from datetime import date
 
+from europarl.db import Rules
+
 
 class Rule:
     BASE_URL = "https://europarl.europa.eu/doceo/document/"
@@ -33,6 +35,18 @@ class Rule:
                 return key
         return "0"
 
-    @staticmethod
-    def get_url(*args, **kwargs):
+    def get_url(self, *args, **kwargs):
         raise NotImplementedError
+
+    @classmethod
+    def use_rule(cls, *args, **kwargs):
+        raise NotImplementedError
+
+    def __init__(self):
+        self.rules_db = None
+        self.id = None
+
+    def register(self, db):
+        self.rules_db = Rules(db)
+        rulename = type(self).__name__
+        self.id = self.rules_db.register_rule(rulename.lower())
