@@ -1,6 +1,7 @@
 import multiprocessing as mp
 import os
 from datetime import date, datetime, timedelta, timezone
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -160,3 +161,54 @@ def test_set_sleep(sessiondaychecker_instance):
     delta = timedelta(minutes=1)
     sd.set_sleep(delta=delta)
     assert sd.sleep_end > start_sleep_end
+
+
+@pytest.mark.parametrize(
+    "status_code,sleep_set",
+    [
+        (
+            200,
+            False,
+        ),
+        (
+            408,
+            True,
+        ),
+        (
+            429,
+            True,
+        ),
+        (
+            500,
+            True,
+        ),
+        (
+            501,
+            True,
+        ),
+    ],
+)
+def test_crawl(sessiondaychecker_instance, status_code, sleep_set):
+    sd = sessiondaychecker_instance
+    sd.startup()
+
+    sd.session.head = Mock(
+        return_value=SimpleNamespace(
+            **{"status_code": status_code, "url": "www.internet.de"}
+        )
+    )
+
+    hit, ret_status_code, document_url, real_url = sd.crawl(
+        sd.session, date(year=2020, month=12, day=10)
+    )
+
+    assert len(sd.session.head.mock_calls) == 1
+    assert (sd.sleep_end > datetime.now(tz=timezone.utc)) == sleep_set
+
+    assert hit != sleep_set
+    assert ret_status_code == status_code
+    assert (
+        document_url
+        == "https://europarl.europa.eu/doceo/document/PV-9-2020-12-10_EN.pdf"
+    )
+    assert real_url == "www.internet.de"
