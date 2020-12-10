@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from .tables import Table
 
 
@@ -37,11 +39,17 @@ class URLs(Table):
                             id SERIAL,
                             date_id integer,
                             rule_id integer,
-                            url text NOT NULL,
+                            url VARCHAR(2000) NOT NULL,
+                            created_at time with time zone,
+                            crawled boolean NOT NULL DEFAULT false,
                             CONSTRAINT urls_pkey PRIMARY KEY (id),
                             CONSTRAINT fk_date FOREIGN KEY (date_id)
                                 REFERENCES public.session_days (id)
-                                    ON DELETE CASCADE
+                                    ON DELETE CASCADE,
+                            CONSTRAINT fk_rule FOREIGN KEY (rule_id)
+                                REFERENCES public.rules (id)
+                                    ON DELETE CASCADE,
+                            UNIQUE(url)
                           );"""
 
     def dates_with_less_derived_urls_than(self, amount_rules, limit):
@@ -57,4 +65,31 @@ class URLs(Table):
                 query,
                 [amount_rules, limit],
             )
-            return db.cur.fetchone()
+            return [{"date_id": x[0], "date": x[1]} for x in db.cur.fetchall()]
+
+    def mark_as_generated(self, derived_urls):
+        query = """ INSERT INTO urls(date_id, rule_id, url, created_at)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (url)
+                    DO
+                        UPDATE SET date_id=%s, rule_id=%s, created_at=%s
+                        WHERE urls.url = %s
+                    RETURNING id
+                """
+
+        for url in derived_urls:
+            with self.db.cursor() as db:
+                db.cur.execute(
+                    query,
+                    [
+                        url["date_id"],
+                        url["rule_id"],
+                        url["url"],
+                        datetime.now(tz=timezone.utc),
+                        url["date_id"],
+                        url["rule_id"],
+                        datetime.now(tz=timezone.utc),
+                        url["url"],
+                    ],
+                )
+                url["url_id"] = db.cur.fetchone()
