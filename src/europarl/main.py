@@ -55,7 +55,7 @@ def main():
         )
 
         token_bucket_q = main_ctx.MPQueue(10)
-        url_q = main_ctx.MPQueue(10)
+        url_q = main_ctx.MPQueue(100)
 
         main_ctx.Proc("TOKEN_GEN_0", TokenBucketWorker, token_bucket_q)
         main_ctx.Proc("SESSION_DAY", SessionDayChecker, token_bucket_q, db)

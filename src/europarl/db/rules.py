@@ -16,7 +16,7 @@ class Rules(Table):
         query = """ INSERT INTO rules(name)
                     VALUES (%s)
                     ON CONFLICT DO NOTHING
-
+                    RETURNING id
                 """
 
         with self.db.cursor() as db:

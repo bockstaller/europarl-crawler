@@ -58,6 +58,7 @@ class URLs(Table):
         query = """SELECT session_days.id ,session_days.dates
                     FROM session_days
                     FULL OUTER JOIN urls ON session_days.id = urls.date_id
+                    WHERE session_days.hit = true
                     GROUP BY session_days.id
                     HAVING COUNT(urls.id) < %s
                     ORDER BY session_days.id
