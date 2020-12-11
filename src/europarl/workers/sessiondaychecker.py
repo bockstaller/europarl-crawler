@@ -1,6 +1,7 @@
 import logging
 import time
 from datetime import datetime, timedelta, timezone
+from multiprocessing.queues import Full
 
 import requests
 from europarl.db import SessionDay
@@ -134,7 +135,10 @@ class SessionDayChecker(QueueProcWorker):
         ):
             self.logger.debug("Returning token to bucket")
             # put "consumed token back on queue, because no crawling work was done"
-            self.work_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
+            try:
+                self.work_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
+            except Full:
+                pass
             self.logger.info("Still sleeping, Returned Token to Bucket")
             time.sleep(self.DEFAULT_POLLING_TIMEOUT)
             return
