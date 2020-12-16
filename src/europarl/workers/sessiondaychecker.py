@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from multiprocessing.queues import Full
 
 import requests
-from europarl.db import SessionDay
+from europarl.db import Request, SessionDay
 from europarl.mptools import QueueProcWorker
 from europarl.rules import PdfProtocol
 
@@ -28,6 +28,7 @@ class SessionDayChecker(QueueProcWorker):
         Initializes a sessionDay-table instance and a long running requests-session object which will handle all outgoing requests
         """
         self.sessionDay = SessionDay(self.db)
+        self.request = Request(self.db)
         self.session = requests.Session()
         self.sleep_end = datetime.now(timezone.utc) - timedelta(hours=1)
 
@@ -103,6 +104,7 @@ class SessionDayChecker(QueueProcWorker):
 
         self.logger.debug("Crawling url: {}".format(document_url))
         resp = self.session.head(document_url, allow_redirects=True)
+        self.request.mark_as_requested(resp.status_code, document_url, resp.url)
         self.logger.debug("Server response: {}".format(resp.status_code))
 
         if resp.status_code in [408, 429]:
