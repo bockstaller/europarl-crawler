@@ -5,6 +5,20 @@ from psycopg2 import sql
 from .tables import Table
 
 
+class URL:
+    date_id = None
+    rule_id = None
+    url_id = None
+    date = None
+    url = None
+
+    def __init__(self, date_id, rule_id, url, date=None, url_id=None):
+        self.date_id = date_id
+        self.rule_id = rule_id
+        self.url_id = url_id
+        self.url = url
+
+
 class URLs(Table):
     """
     Stores information about URLs
@@ -85,17 +99,17 @@ class URLs(Table):
                 db.cur.execute(
                     query,
                     [
-                        url["date_id"],
-                        url["rule_id"],
-                        url["url"],
+                        url.date_id,
+                        url.rule_id,
+                        url.url,
                         datetime.now(tz=timezone.utc),
-                        url["date_id"],
-                        url["rule_id"],
+                        url.date_id,
+                        url.rule_id,
                         datetime.now(tz=timezone.utc),
-                        url["url"],
+                        url.url,
                     ],
                 )
-                url["url_id"] = db.cur.fetchone()
+                url.url_id = db.cur.fetchone()[0]
 
     def drop_uncrawled_urls(self):
         query = """ DELETE FROM {schema}.{table}

@@ -58,7 +58,7 @@ class DateUrlGenerator(ProcWorker):
             if not self.url:
                 self.url = self.derived_urls.pop()
             self.url_q.put(self.url, timeout=self.DEFAULT_POLLING_TIMEOUT)
-            self.logger.info("Queued up url:{}".format(self.url["url"]))
+            self.logger.info("Queued up url:{}".format(self.url.url))
             self.url = None
         except Full:
             return

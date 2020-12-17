@@ -1,3 +1,5 @@
+from europarl.db.url import URL
+
 from .rule import Rule
 
 
@@ -18,12 +20,12 @@ class Protocol(Rule):
         return document_url
 
     def get_url(self, date):
-        return {
-            "rule_id": self.id,
-            "url": self.use_rule(date["date"]),
-            "date": date["date"],
-            "date_id": date["date_id"],
-        }
+        return URL(
+            date_id=date["date_id"],
+            rule_id=self.id,
+            url=self.use_rule(date["date"]),
+            date=date["date"],
+        )
 
 
 class PdfProtocol(Protocol):
