@@ -7,21 +7,23 @@ class Rules(Table):
     table_name = "rules"
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id SERIAL,
-                            name VARCHAR(100),
+                            rulename VARCHAR(100),
                             CONSTRAINT rules_pkey PRIMARY KEY (id),
-                            CONSTRAINT name_unique UNIQUE (name)
+                            CONSTRAINT name_unique UNIQUE (rulename)
                           );"""
 
     def register_rule(self, name):
-        query = """ INSERT INTO rules(name)
+        query = """ INSERT INTO rules(rulename)
                     VALUES (%s)
-                    ON CONFLICT DO NOTHING
+                    ON CONFLICT (rulename)
+                    DO
+                        UPDATE SET rulename=%s
                     RETURNING id
                 """
 
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [name],
+                [name, name],
             )
-            return db.cur.fetchone()
+            return db.cur.fetchone()[0]
