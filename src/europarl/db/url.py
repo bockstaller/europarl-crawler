@@ -58,6 +58,7 @@ class URLs(Table):
                             url VARCHAR(2000) NOT NULL,
                             created_at time with time zone,
                             crawled boolean NOT NULL DEFAULT false,
+                            crawled_at time with time zone,
                             CONSTRAINT urls_pkey PRIMARY KEY (id),
                             CONSTRAINT fk_date FOREIGN KEY (date_id)
                                 REFERENCES public.session_days (id)
@@ -110,6 +111,22 @@ class URLs(Table):
                     ],
                 )
                 url.url_id = db.cur.fetchone()[0]
+
+    def mark_as_crawled(self, url):
+        query = """
+                    UPDATE urls
+                    SET crawled = 'true', crawled_at = %s
+                    WHERE urls.id = %s AND urls.url = %s
+                    RETURNING id
+                """
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [datetime.now(tz=timezone.utc), url.url_id, url.url],
+            )
+            if not db.cur.fetchone():
+                raise Exception
 
     def drop_uncrawled_urls(self):
         query = """ DELETE FROM {schema}.{table}
