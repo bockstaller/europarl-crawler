@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import datetime, timezone
 
 from psycopg2 import sql
@@ -12,7 +13,7 @@ class Request(Table):
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id SERIAL,
                             url_id integer,
-                            requested_at time with time zone,
+                            requested_at timestamp with time zone,
                             status_code integer,
                             content uuid,
                             requested_url varchar(2000),
@@ -22,6 +23,9 @@ class Request(Table):
                                 REFERENCES public.urls (id)
                                     ON DELETE NO ACTION
                           );"""
+    index_definition = """  CREATE INDEX requested_at_index
+                            ON public.requests USING btree
+                            (requested_at DESC NULLS LAST)"""
 
     def mark_as_requested(
         self,
@@ -50,3 +54,23 @@ class Request(Table):
                 ],
             )
             return db.cur.fetchone()
+
+    def get_status_code_summary(self, start_time, end_time):
+        query = """ SELECT status_code
+                    FROM   requests
+                    WHERE  requested_at BETWEEN %s AND %s ;"""
+
+        print(start_time)
+        print(end_time)
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [start_time, end_time],
+            )
+            rows = db.cur.fetchall()
+
+        counter = Counter()
+        counter.update([row[0] for row in rows])
+
+        return counter
