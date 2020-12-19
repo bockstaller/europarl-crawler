@@ -60,7 +60,7 @@ def main():
         )
 
         token_bucket_q = main_ctx.MPQueue(100)
-        url_q = main_ctx.MPQueue(10000)
+        url_q = main_ctx.MPQueue(10)
 
         main_ctx.Proc("DATE_URL_GEN", DateUrlGenerator, url_q, db)
         main_ctx.Proc("TOKEN_GEN", TokenBucketWorker, token_bucket_q)
@@ -68,8 +68,6 @@ def main():
         main_ctx.Proc("DOWNLOADER_0", DocumentDownloader, token_bucket_q, url_q, db)
         main_ctx.Proc("DOWNLOADER_1", DocumentDownloader, token_bucket_q, url_q, db)
         main_ctx.Proc("DOWNLOADER_2", DocumentDownloader, token_bucket_q, url_q, db)
-        main_ctx.Proc("DOWNLOADER_3", DocumentDownloader, token_bucket_q, url_q, db)
-        main_ctx.Proc("DOWNLOADER_4", DocumentDownloader, token_bucket_q, url_q, db)
 
         while not main_ctx.shutdown_event.is_set():
             event = main_ctx.event_queue.safe_get()
