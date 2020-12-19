@@ -24,6 +24,7 @@ colorama = "*"
 psycopg2-binary = "*"
 pytest = "*"
 requests-futures = "*"
+beautifulsoup4 = "*"
 
 [scripts]
 test = "python -m pytest ."
