@@ -63,7 +63,7 @@ def main():
         url_q = main_ctx.MPQueue(10)
 
         main_ctx.Proc("DATE_URL_GEN", DateUrlGenerator, url_q, db)
-        main_ctx.Proc("TOKEN_GEN", TokenBucketWorker, token_bucket_q)
+        main_ctx.Proc("TOKEN_GEN", TokenBucketWorker, token_bucket_q, db)
         main_ctx.Proc("SESSION_DAY", SessionDayChecker, token_bucket_q, db)
         main_ctx.Proc("DOWNLOADER_0", DocumentDownloader, token_bucket_q, url_q, db)
         main_ctx.Proc("DOWNLOADER_1", DocumentDownloader, token_bucket_q, url_q, db)

@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta, timezone
 from queue import Full
 
+from europarl.db import Request
 from europarl.mptools import TimerProcWorker
 
 
@@ -9,13 +11,69 @@ class TokenBucketWorker(TimerProcWorker):
 
     """
 
-    INTERVAL_SECS = 0.2
+    MIN_INTERVAL_SECS = 0.2
+    INTERVAL_SECS = MIN_INTERVAL_SECS
     DEFAULT_POLLING_TIMEOUT = 0.1
+    THROTTLING_INTERVALL = 1
 
     token_nr = 0
 
     def init_args(self, args):
-        (self.token_bucket_q,) = args
+        (self.token_bucket_q, self.db) = args
+
+    def throttle(self):
+        self.logger.debug("Emptying Token Bucket")
+        self.token_bucket_q.drain()
+
+        if self.INTERVAL_SECS < self.MIN_INTERVAL_SECS * 100000:
+            self.INTERVAL_SECS = self.INTERVAL_SECS * 2
+            self.logger.info(
+                "Throttling resulted in a sleeping interval of {} seconds".format(
+                    self.INTERVAL_SECS
+                )
+            )
+
+    def unthrottle(self):
+        if self.INTERVAL_SECS > self.MIN_INTERVAL_SECS:
+            self.INTERVAL_SECS = self.INTERVAL_SECS / 2
+            self.logger.info(
+                "Unthrottling resulted in a sleeping interval of {} seconds".format(
+                    self.INTERVAL_SECS
+                )
+            )
+
+    def check_throttling(self):
+        now = datetime.now(tz=timezone.utc)
+        self.logger.debug("Check if a throttling check is necessary.")
+        if now > self.next_check:
+            self.logger.debug("Checking status codes")
+            status_codes = self.request.get_status_code_summary(
+                self.last_check, now
+            ).keys()
+
+            self.logger.debug("Setting checking timerange for next iteration")
+            self.last_check = now
+            self.next_check = now + timedelta(seconds=10)
+
+            if any(item in [408, 429] for item in status_codes):
+                self.logger.info(
+                    "Requesting throttling because of server rate limiting."
+                )
+                self.throttle()
+                return
+            if any(item in list(range(500, 599)) for item in status_codes):
+                self.logger.info("Requesting throttling because of server errors.")
+                self.throttle()
+                return
+            self.logger.info("Requesting unthrottling")
+            self.unthrottle()
+
+    def startup(self):
+        super().startup()
+        self.db.connection_name = self.db.connection_name + " - TokenBucket"
+        self.request = Request(self.db)
+        self.last_check = datetime.now(tz=timezone.utc)
+        self.next_check = self.last_check + timedelta(seconds=self.THROTTLING_INTERVALL)
 
     def main_func(self):
         """
@@ -31,6 +89,7 @@ class TokenBucketWorker(TimerProcWorker):
         try:
             self.token_bucket_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
             self.logger.info("Enqueued token: {}".format(token))
+            self.check_throttling()
         except Full:
             self.logger.debug("Queue full. - Discarding token: {}".format(token))
             return
