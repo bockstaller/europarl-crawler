@@ -21,7 +21,12 @@ from europarl.mptools import (
     default_signal_handler,
     init_signals,
 )
-from europarl.workers import DateUrlGenerator, SessionDayChecker, TokenBucketWorker
+from europarl.workers import (
+    DateUrlGenerator,
+    DocumentDownloader,
+    SessionDayChecker,
+    TokenBucketWorker,
+)
 
 DEFAULT_POLLING_TIMEOUT = 0.1
 TOKENS_PER_SECOND = 2
@@ -54,12 +59,17 @@ def main():
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
 
-        token_bucket_q = main_ctx.MPQueue(10)
+        token_bucket_q = main_ctx.MPQueue(100)
         url_q = main_ctx.MPQueue(10000)
 
         main_ctx.Proc("DATE_URL_GEN", DateUrlGenerator, url_q, db)
-        main_ctx.Proc("TOKEN_GEN_0", TokenBucketWorker, token_bucket_q)
+        main_ctx.Proc("TOKEN_GEN", TokenBucketWorker, token_bucket_q)
         main_ctx.Proc("SESSION_DAY", SessionDayChecker, token_bucket_q, db)
+        main_ctx.Proc("DOWNLOADER_0", DocumentDownloader, token_bucket_q, url_q, db)
+        main_ctx.Proc("DOWNLOADER_1", DocumentDownloader, token_bucket_q, url_q, db)
+        main_ctx.Proc("DOWNLOADER_2", DocumentDownloader, token_bucket_q, url_q, db)
+        main_ctx.Proc("DOWNLOADER_3", DocumentDownloader, token_bucket_q, url_q, db)
+        main_ctx.Proc("DOWNLOADER_4", DocumentDownloader, token_bucket_q, url_q, db)
 
         while not main_ctx.shutdown_event.is_set():
             event = main_ctx.event_queue.safe_get()

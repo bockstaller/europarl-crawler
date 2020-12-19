@@ -1,3 +1,4 @@
-from europarl.workers.dateurlgenerator import DateUrlGenerator
-from europarl.workers.sessiondaychecker import SessionDayChecker
-from europarl.workers.tokenbucket import TokenBucketWorker
+from .dateurlgenerator import DateUrlGenerator
+from .documentdownloader import DocumentDownloader
+from .sessiondaychecker import SessionDayChecker
+from .tokenbucket import TokenBucketWorker
