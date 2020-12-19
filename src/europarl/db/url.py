@@ -67,9 +67,15 @@ class URLs(Table):
                                     ON DELETE CASCADE,
                             CONSTRAINT fk_rule FOREIGN KEY (rule_id)
                                 REFERENCES public.rules (id)
-                                    ON DELETE CASCADE,
-                            UNIQUE(url)
+                                    ON DELETE CASCADE
                           );"""
+    index_definition = """CREATE UNIQUE INDEX "unique_url"
+                            ON {schema}.{table}
+                            USING btree (digest(url, 'sha512'::text));
+                            CREATE INDEX CONCURRENTLY fk_date_id
+                         ON public.urls USING btree
+                            (date_id ASC NULLS LAST)
+"""
 
     def dates_with_less_derived_urls_than(self, amount_rules, limit):
         query = """SELECT session_days.id ,session_days.dates
@@ -90,7 +96,7 @@ class URLs(Table):
     def mark_as_generated(self, derived_urls):
         query = """ INSERT INTO urls(date_id, rule_id, url, created_at)
                     VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (url)
+                    ON CONFLICT (digest(url, 'sha512'::text))
                     DO
                         UPDATE SET date_id=%s, rule_id=%s, created_at=%s
                         WHERE urls.url = %s
@@ -127,8 +133,6 @@ class URLs(Table):
                 query,
                 [datetime.now(tz=timezone.utc), url.url_id, url.url],
             )
-            if not db.cur.fetchone():
-                raise Exception
 
     def drop_uncrawled_urls(self):
         query = """ DELETE FROM {schema}.{table}
