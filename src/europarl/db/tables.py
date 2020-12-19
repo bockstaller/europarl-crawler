@@ -15,6 +15,9 @@ class Table(ABC):
 
     """
 
+    table_definition = None
+    index_definition = None
+
     def __init__(self, DBInterface):
         """Creates a new instance of the table class
 
@@ -44,6 +47,13 @@ class Table(ABC):
                     table=sql.Identifier(self.table_name),
                 )
             )
+            if self.index_definition:
+                db.cur.execute(
+                    sql.SQL(self.index_definition).format(
+                        schema=sql.Identifier(self.schema),
+                        table=sql.Identifier(self.table_name),
+                    )
+                )
 
     def table_exists(self):
         """Checks if the table exists in the database
