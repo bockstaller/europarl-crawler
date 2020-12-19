@@ -69,10 +69,13 @@ class URLs(Table):
                                 REFERENCES public.rules (id)
                                     ON DELETE CASCADE
                           );"""
-    index_definition = """CREATE UNIQUE INDEX "unique_url"
+    index_definition = """  CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+                            CREATE UNIQUE INDEX "unique_url"
                             ON {schema}.{table}
                             USING btree (digest(url, 'sha512'::text));
-                            CREATE INDEX CONCURRENTLY fk_date_id
+
+                            CREATE INDEX fk_date_id
                          ON public.urls USING btree
                             (date_id ASC NULLS LAST)
 """
