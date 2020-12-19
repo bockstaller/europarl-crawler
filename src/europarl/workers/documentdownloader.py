@@ -26,6 +26,7 @@ class DocumentDownloader(QueueProcWorker):
 
     def startup(self):
         """"""
+        self.db.connection_name = self.db.connection_name + " - DocumentDownloader"
         self.request = Request(self.db)
         self.url = URLs(self.db)
         self.session = requests.Session()

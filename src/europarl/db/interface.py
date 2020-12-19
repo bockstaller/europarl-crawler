@@ -26,6 +26,7 @@ class DBInterface:
             host string: hostname/adress to connect to
             port number: host port to connect to
         """
+        self.connection_name = "europarl-crawler"
         self.name = name
         self.user = user
         self.password = password
@@ -51,6 +52,7 @@ class DBInterface:
             password=self.password,
             host=self.host,
             port=self.port,
+            application_name=self.connection_name,
         )
         return self.connection
 

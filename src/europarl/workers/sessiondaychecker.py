@@ -27,6 +27,7 @@ class SessionDayChecker(QueueProcWorker):
         """
         Initializes a sessionDay-table instance and a long running requests-session object which will handle all outgoing requests
         """
+        self.db.connection_name = self.db.connection_name + " - SessionDayChecker"
         self.sessionDay = SessionDay(self.db)
         self.request = Request(self.db)
         self.session = requests.Session()

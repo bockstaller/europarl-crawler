@@ -14,6 +14,7 @@ class DateUrlGenerator(ProcWorker):
 
     def startup(self):
         super().startup()
+        self.db.connection_name = self.db.connection_name + " - DateURLGenerator"
         self.urls = URLs(self.db)
 
         rules = [HtmlProtocol, PdfProtocol]
