@@ -11,12 +11,14 @@ class URL:
     url_id = None
     date = None
     url = None
+    file_ending = None
 
-    def __init__(self, date_id, rule_id, url, date=None, url_id=None):
+    def __init__(self, date_id, rule_id, url, date=None, url_id=None, file_ending=None):
         self.date_id = date_id
         self.rule_id = rule_id
         self.url_id = url_id
         self.url = url
+        self.file_ending = file_ending
 
 
 class URLs(Table):

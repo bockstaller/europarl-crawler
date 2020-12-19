@@ -25,6 +25,7 @@ class Protocol(Rule):
             rule_id=self.id,
             url=self.use_rule(date["date"]),
             date=date["date"],
+            file_ending=self.format,
         )
 
 
