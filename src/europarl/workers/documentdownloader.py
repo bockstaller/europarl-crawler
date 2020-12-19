@@ -57,6 +57,7 @@ class DocumentDownloader(QueueProcWorker):
                 requested_url=url_obj.url,
                 final_url=resp.url,
                 content_uuid=str(generated_uuid),
+                url_id=url_obj.url_id,
             )
 
             self.url.mark_as_crawled(url_obj)

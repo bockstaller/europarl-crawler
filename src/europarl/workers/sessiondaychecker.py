@@ -105,7 +105,9 @@ class SessionDayChecker(QueueProcWorker):
 
         self.logger.debug("Crawling url: {}".format(document_url))
         resp = self.session.head(document_url, allow_redirects=True)
-        self.request.mark_as_requested(resp.status_code, document_url, resp.url)
+        self.request.mark_as_requested(
+            status_code=resp.status_code, requested_url=document_url, final_url=resp.url
+        )
         self.logger.debug("Server response: {}".format(resp.status_code))
 
         if resp.status_code in [408, 429]:
