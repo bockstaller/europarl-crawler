@@ -26,10 +26,16 @@ class TokenBucketWorker(TimerProcWorker):
         self.request = Request(self.db)
 
     def throttle(self):
-        self.logger.debug("Emptying Token Bucket")
-        self.token_bucket_q.drain()
+        """
+        Each call of throttle doubles the INTERVAL_SECS value, resulting in doubling the time necessary to generate a token. The upper limmit is currentle 2^16*MIN_INTERVAL_SECS.
+        A call to this function drains the token bucket as well. Effectively removing the capabillity of the crawlers to make requests until a new token is generated.
 
-        if self.INTERVAL_SECS < self.MIN_INTERVAL_SECS * 100000:
+        The mirror function is unthrottle which will gradually reduce the token generation interval.
+        """
+        num_left = sum(1 for __ in self.token_bucket_q.drain())
+        self.logger.debug("Removed {} tokens from Token Bucket".format(num_left))
+
+        if self.INTERVAL_SECS < self.MIN_INTERVAL_SECS * 65536:
             self.INTERVAL_SECS = self.INTERVAL_SECS * 2
             self.logger.info(
                 "Throttling resulted in a sleeping interval of {} seconds".format(
@@ -38,6 +44,11 @@ class TokenBucketWorker(TimerProcWorker):
             )
 
     def unthrottle(self):
+        """
+        Doubles the token genereation rate by halfing the INTERVAL_SECS with every call.
+        The lower limit for INTERVAL_SECS is MIN_INTERVAL_SECS.
+        This function does not affect the token bucket queue directly like throttle() does.
+        """
         if self.INTERVAL_SECS > self.MIN_INTERVAL_SECS:
             self.INTERVAL_SECS = self.INTERVAL_SECS / 2
             self.logger.info(

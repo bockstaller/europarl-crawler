@@ -1,6 +1,7 @@
 import multiprocessing as mp
 import os
 from datetime import date, datetime, timedelta, timezone
+from queue import Empty
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
@@ -160,3 +161,45 @@ def test_apply_throttling(tokenbucket_instance, status_codes, throttling, unthro
     tokenbucket_instance.apply_throttling(status_codes)
     assert len(tokenbucket_instance.throttle.mock_calls) == throttling
     assert len(tokenbucket_instance.unthrottle.mock_calls) == unthrottling
+
+
+def test_throttle(tokenbucket_instance):
+    tokenbucket_instance.token_bucket_q = MPQueue(11)
+
+    for i in range(20):
+        for j in range(10):
+            tokenbucket_instance.token_bucket_q.safe_put(j)
+        assert tokenbucket_instance.token_bucket_q.safe_get() == 0
+
+        old = tokenbucket_instance.INTERVAL_SECS
+
+        tokenbucket_instance.throttle()
+
+        if i < 16:
+            assert tokenbucket_instance.INTERVAL_SECS == 2 * old
+        else:
+            assert tokenbucket_instance.INTERVAL_SECS == old
+
+        assert tokenbucket_instance.token_bucket_q.empty()
+
+
+def test_unthrottle(tokenbucket_instance):
+    tokenbucket_instance.token_bucket_q = MPQueue(11)
+
+    for i in range(16):
+        tokenbucket_instance.throttle()
+
+    assert (
+        tokenbucket_instance.INTERVAL_SECS
+        == tokenbucket_instance.MIN_INTERVAL_SECS * (2 ** 16)
+    )
+
+    for i in range(20):
+        old = tokenbucket_instance.INTERVAL_SECS
+
+        tokenbucket_instance.unthrottle()
+
+        if i < 16:
+            assert tokenbucket_instance.INTERVAL_SECS == old / 2
+        else:
+            assert tokenbucket_instance.INTERVAL_SECS == old
