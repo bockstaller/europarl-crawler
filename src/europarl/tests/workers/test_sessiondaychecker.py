@@ -20,14 +20,8 @@ from europarl.workers import SessionDayChecker
 
 
 @pytest.fixture
-def sessiondaychecker_instance(request):
-    db = DBInterface(
-        name="test",
-        user=os.getenv("EUROPARL_DB_USER"),
-        password=os.getenv("EUROPARL_DB_PASSWORD"),
-        host=os.getenv("EUROPARL_DB_HOST"),
-        port=os.getenv("EUROPARL_DB_PORT"),
-    )
+def sessiondaychecker_instance(request, db_interface):
+    db = db_interface
 
     with MainContext() as main_ctx:
         init_signals(
