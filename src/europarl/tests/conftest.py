@@ -123,3 +123,52 @@ def db_interface(template_database_setup, request):
     request.addfinalizer(fin)
 
     return db_connection
+
+
+@pytest.fixture(scope="module")
+def db_interface_module(template_database_setup, request):
+    """
+    Creates a fresh database for every test_module by templating
+    the template database from the tempalte_database_setup-fixture
+    and dropping it after finishing the test.
+
+    Args:
+        template_database_setup (DBInterface): DBInterface to the template database
+        request (pytest.request): manages fixture/test lifecycle
+
+    Returns:
+        [type]: [description]
+    """
+    load_dotenv(override=True)
+
+    template_db = template_database_setup
+
+    with template_db.cursor() as db:
+        db.con.autocommit = True
+        db.cur.execute(
+            SQL("drop database if exists {db_name};").format(db_name=Identifier(TESTDB))
+        )
+        db.cur.execute(
+            SQL("create database {db_name} with template {template};").format(
+                db_name=Identifier(TESTDB), template=Identifier(TESTDB_TEMPLATE)
+            )
+        )
+
+    db_connection = DBInterface(
+        name=TESTDB,
+        user=os.getenv("EUROPARL_DB_USER"),
+        password=os.getenv("EUROPARL_DB_PASSWORD"),
+        host=os.getenv("EUROPARL_DB_HOST"),
+        port=os.getenv("EUROPARL_DB_PORT"),
+    )
+
+    def fin():
+        db_connection.close()
+        with template_db.cursor() as db:
+            db.cur.execute(
+                SQL("drop database {db_name};").format(db_name=Identifier(TESTDB))
+            )
+
+    request.addfinalizer(fin)
+
+    return db_connection
