@@ -22,7 +22,7 @@ from europarl.workers import SessionDayChecker
 
 @pytest.fixture
 def config():
-
+    # TODO modify settings.ini to use in tests
     config = configparser.ConfigParser()
     config.read("settings.ini")
     return config

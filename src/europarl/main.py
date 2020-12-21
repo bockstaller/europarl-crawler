@@ -90,7 +90,6 @@ def read_config():
 
 
 def create_table_structure(config):
-    print(list(config["General"].keys()))
 
     temp_db = DBInterface(
         name=config["General"]["dbname"],

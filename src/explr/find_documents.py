@@ -60,7 +60,6 @@ for url in urls:
 
 for f in futures:
     resp = f.result()
-    print(resp.status_code)
     if resp.status_code == 200:
         with open(filename, "a", newline="") as csvfile:
             urlwriter = csv.writer(csvfile)

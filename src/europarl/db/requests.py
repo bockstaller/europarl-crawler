@@ -60,9 +60,6 @@ class Request(Table):
                     FROM   requests
                     WHERE  requested_at BETWEEN %s AND %s ;"""
 
-        print(start_time)
-        print(end_time)
-
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
