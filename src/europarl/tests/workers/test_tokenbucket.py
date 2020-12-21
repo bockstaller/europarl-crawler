@@ -1,3 +1,4 @@
+import configparser
 import multiprocessing as mp
 import os
 from datetime import date, datetime, timedelta, timezone
@@ -21,10 +22,18 @@ from europarl.workers import TokenBucketWorker
 
 
 @pytest.fixture
-def tokenbucket_instance(request, db_interface_module):
-    db = db_interface_module
+def config():
 
-    with MainContext() as main_ctx:
+    config = configparser.ConfigParser()
+    config.read("settings.ini")
+    return config
+
+
+@pytest.fixture
+def tokenbucket_instance(request, db_interface_module, config):
+    # db = db_interface_module
+
+    with MainContext(config) as main_ctx:
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
@@ -38,8 +47,8 @@ def tokenbucket_instance(request, db_interface_module):
             main_ctx.shutdown_event,
             main_ctx.event_queue,
             main_ctx.logger_q,
+            main_ctx.config["TokenBucketWorker"],
             token_bucket_q,
-            db,
         )
 
 
@@ -80,6 +89,7 @@ def test_startup(tokenbucket_instance):
 def test_check_throttling(
     tokenbucket_instance, throttling_intervall, last_check, now, next_check, calls
 ):
+    tokenbucket_instance.startup()
 
     tokenbucket_instance.THROTTLING_INTERVAL = throttling_intervall
 

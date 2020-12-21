@@ -16,19 +16,6 @@ DEFAULT_POLLING_TIMEOUT = 0.02
 MAX_SLEEP_SECS = 0.02
 
 
-def setup_logging(logger_q, name):
-    logger = logging.getLogger(name)
-
-    if not logger.hasHandlers():
-        h = logging.handlers.QueueHandler(logger_q)
-        f = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-        h.setFormatter(f)
-        logger.addHandler(h)
-        logger.setLevel(logging.DEBUG)
-
-    return logger
-
-
 # TODO: Mitigate hard crashing processes by restarting them
 # TODO:
 
@@ -127,23 +114,45 @@ def init_signals(shutdown_event, int_handler, term_handler):
     return signal_object
 
 
+def setup_logging(
+    name,
+    logger_q,
+    config,
+):
+    logger = logging.getLogger(name)
+
+    if not logger.hasHandlers():
+        h = logging.handlers.QueueHandler(logger_q)
+        f = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+        h.setFormatter(f)
+        logger.addHandler(h)
+
+        logger.setLevel(config.get("loglevel", "DEBUG"))
+
+    return logger
+
+
 # -- Worker Process classes
-
-
 class ProcWorker:
     MAX_TERMINATE_CALLED = 3
     int_handler = staticmethod(default_signal_handler)
     term_handler = staticmethod(default_signal_handler)
 
-    def __init__(self, name, startup_event, shutdown_event, event_q, logger_q, *args):
+    def __init__(
+        self, name, startup_event, shutdown_event, event_q, logger_q, config, *args
+    ):
 
         self.name = name
         self.startup_event = startup_event
         self.shutdown_event = shutdown_event
         self.event_q = event_q
+        self.logger_q = logger_q
+        self.config = config
         self.terminate_called = 0
 
-        self.logger = setup_logging(logger_q, name=name)
+        self.logger = setup_logging(
+            name=self.name, logger_q=self.logger_q, config=self.config
+        )
 
         self.init_args(args)
 
@@ -241,26 +250,35 @@ class QueueProcWorker(ProcWorker):
 
 
 def proc_worker_wrapper(
-    proc_worker_class, name, startup_evt, shutdown_evt, event_q, logger_q, *args
+    proc_worker_class, name, startup_evt, shutdown_evt, event_q, logger_q, config, *args
 ):
 
     proc_worker = proc_worker_class(
-        name, startup_evt, shutdown_evt, event_q, logger_q, *args
+        name, startup_evt, shutdown_evt, event_q, logger_q, config, *args
     )
     return proc_worker.run()
 
 
 class Proc:
-    STARTUP_WAIT_SECS = 10.0
-    SHUTDOWN_WAIT_SECS = 10.0
+    STARTUP_WAIT_SECS = 3.0
+    SHUTDOWN_WAIT_SECS = 3.0
 
-    def __init__(self, name, worker_class, shutdown_event, event_q, logger_q, *args):
+    def __init__(
+        self,
+        *args,
+        name,
+        worker_class,
+        shutdown_event,
+        event_q,
+        logger_q,
+        config,
+    ):
 
         self.name = name
         self.shutdown_event = shutdown_event
         self.startup_event = mp.Event()
 
-        self.logger = setup_logging(logger_q, name=name)
+        self.logger = setup_logging(logger_q=logger_q, name=name, config=config)
 
         self.proc = mp.Process(
             target=proc_worker_wrapper,
@@ -271,6 +289,7 @@ class Proc:
                 shutdown_event,
                 event_q,
                 logger_q,
+                config,
                 *args,
             ),
         )
@@ -325,13 +344,17 @@ class Proc:
 class MainContext:
     STOP_WAIT_SECS = 3.0
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+
         self.logger_q = mp.Queue(-1)
 
         queue_handler = QueueHandler(self.logger_q)
         queue_handler.setLevel(logging.DEBUG)
 
-        self.logger = setup_logging(self.logger_q, name="MAIN")
+        self.logger = setup_logging(
+            logger_q=self.logger_q, name="MAIN", config=self.config["General"]
+        )
 
         handler = logging.StreamHandler()
         handler.setLevel(logging.DEBUG)
@@ -362,15 +385,17 @@ class MainContext:
         # -- Don't eat exceptions that reach here.
         return not exc_type
 
-    def Proc(self, name, worker_class, *args):
+    def Proc(self, *args, name="", worker_class="", config=""):
         proc = Proc(
-            name,
-            worker_class,
-            self.shutdown_event,
-            self.event_queue,
-            self.logger_q,
             *args,
+            name=name,
+            worker_class=worker_class,
+            shutdown_event=self.shutdown_event,
+            event_q=self.event_queue,
+            logger_q=self.logger_q,
+            config=config,
         )
+
         self.procs.append(proc)
         return proc
 

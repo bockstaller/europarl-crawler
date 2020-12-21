@@ -9,6 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/europarl/main.py",
+            "cwd": "${workspaceFolder}/src/europarl/",
             "console": "integratedTerminal"
         }
     ]

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from queue import Full
 
-from europarl.db import Request
+from europarl.db import DBInterface, Request
 from europarl.mptools import TimerProcWorker
 
 
@@ -21,9 +21,27 @@ class TokenBucketWorker(TimerProcWorker):
     next_check = None
 
     def init_args(self, args):
-        (self.token_bucket_q, self.db) = args
-        self.db.connection_name = self.db.connection_name + " - TokenBucket"
+        (self.token_bucket_q,) = args
+
+    def startup(self):
+        """
+        Initializes the last and next check timestamps
+        """
+        super().startup()
+
+        self.db = DBInterface(
+            name=self.config["dbname"],
+            user=self.config["dbuser"],
+            password=self.config["dbpassword"],
+            host=self.config["dbhost"],
+            port=self.config["dbport"],
+        )
+
+        self.db.connection_name = self.name
         self.request = Request(self.db)
+
+        self.last_check = datetime.now(tz=timezone.utc)
+        self.next_check = self.last_check + timedelta(seconds=self.THROTTLING_INTERVAL)
 
     def throttle(self):
         """
@@ -95,14 +113,6 @@ class TokenBucketWorker(TimerProcWorker):
             self.last_check = now
             self.next_check = now + timedelta(seconds=self.THROTTLING_INTERVAL)
             self.apply_throttling(status_codes)
-
-    def startup(self):
-        """
-        Initializes the last and next check timestamps
-        """
-        super().startup()
-        self.last_check = datetime.now(tz=timezone.utc)
-        self.next_check = self.last_check + timedelta(seconds=self.THROTTLING_INTERVAL)
 
     def main_func(self):
         """

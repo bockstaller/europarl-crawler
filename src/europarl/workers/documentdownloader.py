@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from multiprocessing.queues import Full
 
 import requests
-from europarl.db import Request
+from europarl.db import DBInterface, Request
 from europarl.db.url import URL, URLs
 from europarl.mptools import QueueProcWorker
 from europarl.rules import PdfProtocol
@@ -17,16 +17,24 @@ class DocumentDownloader(QueueProcWorker):
     PATH = "../data/"
 
     def init_args(self, args):
-        self.logger.log(logging.DEBUG, f"Entering QueueProcWorker.init_args : {args}")
         (
             self.work_q,
             self.url_q,
-            self.db,
         ) = args
 
     def startup(self):
         """"""
-        self.db.connection_name = self.db.connection_name + " - DocumentDownloader"
+        super().startup()
+
+        self.db = DBInterface(
+            name=self.config["dbname"],
+            user=self.config["dbuser"],
+            password=self.config["dbpassword"],
+            host=self.config["dbhost"],
+            port=self.config["dbport"],
+        )
+
+        self.db.connection_name = self.name
         self.request = Request(self.db)
         self.url = URLs(self.db)
         self.session = requests.Session()

@@ -1,3 +1,4 @@
+import configparser
 import multiprocessing as mp
 import os
 from datetime import date, datetime, timedelta, timezone
@@ -20,10 +21,18 @@ from europarl.workers import SessionDayChecker
 
 
 @pytest.fixture
-def sessiondaychecker_instance(request, db_interface):
-    db = db_interface
+def config():
 
-    with MainContext() as main_ctx:
+    config = configparser.ConfigParser()
+    config.read("settings.ini")
+    return config
+
+
+@pytest.fixture
+def sessiondaychecker_instance(request, db_interface, config):
+    # db = db_interface
+
+    with MainContext(config) as main_ctx:
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
@@ -35,9 +44,9 @@ def sessiondaychecker_instance(request, db_interface):
             mp.Event(),
             main_ctx.shutdown_event,
             main_ctx.event_queue,
-            token_bucket_q,
             main_ctx.logger_q,
-            db,
+            main_ctx.config["SessionDayChecker"],
+            token_bucket_q,
         )
 
 

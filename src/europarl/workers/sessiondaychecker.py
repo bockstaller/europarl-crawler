@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from multiprocessing.queues import Full
 
 import requests
-from europarl.db import Request, SessionDay
+from europarl.db import DBInterface, Request, SessionDay
 from europarl.mptools import QueueProcWorker
 from europarl.rules import PdfProtocol
 
@@ -17,20 +17,28 @@ class SessionDayChecker(QueueProcWorker):
     dates_to_check = []
 
     def init_args(self, args):
-        self.logger.log(logging.DEBUG, f"Entering QueueProcWorker.init_args : {args}")
-        (
-            self.work_q,
-            self.db,
-        ) = args
+        (self.work_q,) = args
 
     def startup(self):
         """
         Initializes a sessionDay-table instance and a long running requests-session object which will handle all outgoing requests
         """
-        self.db.connection_name = self.db.connection_name + " - SessionDayChecker"
+        super().startup()
+
+        self.db = DBInterface(
+            name=self.config["dbname"],
+            user=self.config["dbuser"],
+            password=self.config["dbpassword"],
+            host=self.config["dbhost"],
+            port=self.config["dbport"],
+        )
+
+        self.db.connection_name = self.name
         self.sessionDay = SessionDay(self.db)
         self.request = Request(self.db)
+
         self.session = requests.Session()
+
         self.sleep_end = datetime.now(timezone.utc) - timedelta(hours=1)
 
     def shutdown(self):

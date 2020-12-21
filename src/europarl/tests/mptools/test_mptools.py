@@ -3,6 +3,7 @@
 
 """Tests for `mptools` package."""
 
+import configparser
 import logging
 import multiprocessing as mp
 import os
@@ -56,6 +57,14 @@ def test_queue_put():
     assert num_left == 2
 
 
+@pytest.fixture
+def config():
+    config = configparser.ConfigParser()
+    config["DEFAULT"] = {"logLevel": "INFO"}
+    config["General"] = {}
+    return config
+
+
 def test_drain_queue():
     Q = MPQueue()
 
@@ -107,8 +116,17 @@ def test_signal_handling():
 
 
 def test_proc_worker_bad_args():
+    config = configparser.ConfigParser()
     with pytest.raises(ValueError):
-        ProcWorker("TEST", 1, 2, 3, "ARG1", "ARG2")
+        ProcWorker(
+            "TEST",
+            1,
+            2,
+            3,
+            config,
+            "ARG1",
+            "ARG2",
+        )
 
 
 class ProcWorkerTest(ProcWorker):
@@ -122,21 +140,26 @@ class ProcWorkerTest(ProcWorker):
 
 def test_proc_worker_good_args():
     logger_q = MPQueue()
-    pw = ProcWorkerTest("TEST", 1, 2, 3, logger_q, "ARG1", "ARG2")
+    config = configparser.ConfigParser()
+    pw = ProcWorkerTest(
+        "TEST",
+        1,
+        2,
+        3,
+        logger_q,
+        config,
+        "ARG1",
+        "ARG2",
+    )
     assert pw.args == ("ARG1", "ARG2")
 
 
 def test_proc_worker_init_signals():
+    config = configparser.ConfigParser()
     pid = os.getpid()
     evt = mp.Event()
     logger_q = MPQueue()
-    pw = ProcWorker(
-        "TEST",
-        1,
-        evt,
-        3,
-        logger_q,
-    )
+    pw = ProcWorker("TEST", 1, evt, 3, logger_q, config)
     so = pw.init_signals()
 
     assert not so.shutdown_event.is_set()
@@ -162,10 +185,11 @@ def test_proc_worker_no_main_func(caplog):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
+    config = configparser.ConfigParser()
 
     try:
         caplog.set_level(logging.INFO)
-        pw = ProcWorker("TEST", startup_evt, shutdown_evt, event_q, logger_q)
+        pw = ProcWorker("TEST", startup_evt, shutdown_evt, event_q, logger_q, config)
         with pytest.raises(NotImplementedError):
             pw.main_func()
 
@@ -178,10 +202,11 @@ def test_proc_worker_run(caplog):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
+    config = configparser.ConfigParser()
 
     caplog.set_level(logging.INFO)
     pw = ProcWorkerTest(
-        "TEST", startup_evt, shutdown_evt, event_q, logger_q, "ARG1", "ARG2"
+        "TEST", startup_evt, shutdown_evt, event_q, logger_q, config, "ARG1", "ARG2"
     )
     assert not startup_evt.is_set()
     assert not shutdown_evt.is_set()
@@ -205,6 +230,7 @@ def _proc_worker_wrapper_helper(
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
+    config = configparser.ConfigParser()
     if args is None:
         args = ()
 
@@ -216,7 +242,14 @@ def _proc_worker_wrapper_helper(
         signal.setitimer(signal.ITIMER_REAL, alarm_secs)
     caplog.set_level(logging.DEBUG)
     exitcode = proc_worker_wrapper(
-        worker_class, "TEST", startup_evt, shutdown_evt, event_q, logger_q, *args
+        worker_class,
+        "TEST",
+        startup_evt,
+        shutdown_evt,
+        event_q,
+        logger_q,
+        config,
+        *args,
     )
     assert startup_evt.is_set()
     assert shutdown_evt.is_set() == expect_shutdown_evt
@@ -246,11 +279,18 @@ def test_proc_worker_exception(caplog):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
+    config = configparser.ConfigParser()
 
     caplog.set_level(logging.INFO)
     with pytest.raises(SystemExit):
         proc_worker_wrapper(
-            ProcWorkerException, "TEST", startup_evt, shutdown_evt, event_q, logger_q
+            ProcWorkerException,
+            "TEST",
+            startup_evt,
+            shutdown_evt,
+            event_q,
+            config,
+            logger_q,
         )
     assert startup_evt.is_set()
     assert not shutdown_evt.is_set()
@@ -311,26 +351,41 @@ class StartHangWorker(ProcWorker):
             time.sleep(1.0)
 
 
-def test_proc_start_hangs(caplog):
+def test_proc_start_hangs(caplog, config):
 
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
+
     caplog.set_level(logging.INFO)
     Proc.STARTUP_WAIT_SECS = 0.2
     try:
         with pytest.raises(RuntimeError):
-            Proc("TEST", StartHangWorker, shutdown_evt, event_q, logger_q)
+            Proc(
+                name="TEST",
+                worker_class=StartHangWorker,
+                shutdown_event=shutdown_evt,
+                event_q=event_q,
+                logger_q=logger_q,
+                config=config,
+            )
     finally:
         Proc.STARTUP_WAIT_SECS = 3.0
 
 
-def test_proc_full_stop(caplog):
+def test_proc_full_stop(caplog, config):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
     caplog.set_level(logging.INFO)
-    proc = Proc("TEST", TimerProcWorkerTest, shutdown_evt, event_q, logger_q)
+    proc = Proc(
+        name="TEST",
+        worker_class=TimerProcWorkerTest,
+        shutdown_event=shutdown_evt,
+        event_q=event_q,
+        logger_q=logger_q,
+        config=config["General"],
+    )
 
     for idx in range(4):
         item = event_q.safe_get(1.0)
@@ -353,17 +408,24 @@ class NeedTerminateWorker(ProcWorker):
             time.sleep(1.0)
 
 
-def test_proc_full_stop_need_terminate(caplog):
+def test_proc_full_stop_need_terminate(caplog, config):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
     caplog.set_level(logging.INFO)
-    proc = Proc("TEST", NeedTerminateWorker, shutdown_evt, event_q, logger_q)
+    proc = Proc(
+        name="TEST",
+        worker_class=NeedTerminateWorker,
+        shutdown_event=shutdown_evt,
+        event_q=event_q,
+        logger_q=logger_q,
+        config=config["General"],
+    )
     proc.full_stop(wait_time=0.1)
 
 
-def test_main_context_stop_queues():
-    with MainContext() as mctx:
+def test_main_context_stop_queues(config):
+    with MainContext(config) as mctx:
         q1 = mctx.MPQueue()
         q1.put("SOMETHING 1")
         q2 = mctx.MPQueue()
@@ -373,11 +435,11 @@ def test_main_context_stop_queues():
     assert mctx._stopped_queues_result == 3
 
 
-def _test_stop_procs(cap_log, proc_name, worker_class):
+def _test_stop_procs(cap_log, proc_name, worker_class, config):
     cap_log.set_level(logging.DEBUG)
-    with MainContext() as mctx:
+    with MainContext(config) as mctx:
         mctx.STOP_WAIT_SECS = 0.1
-        mctx.Proc(proc_name, worker_class)
+        mctx.Proc(name=proc_name, worker_class=worker_class, config=config["General"])
         time.sleep(0.05)
 
     for proc in mctx.procs:
@@ -385,9 +447,9 @@ def _test_stop_procs(cap_log, proc_name, worker_class):
     return mctx._stopped_procs_result, len(mctx.procs)
 
 
-def test_main_context_exception():
+def test_main_context_exception(config):
     with pytest.raises(ValueError):
-        with MainContext():
+        with MainContext(config):
             raise ValueError("Yep, this is a value Error")
 
 
@@ -397,9 +459,9 @@ class CleanProcWorker(ProcWorker):
         return
 
 
-def test_main_context_stop_procs_clean(caplog):
+def test_main_context_stop_procs_clean(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_stop_procs(
-        caplog, "CLEAN", CleanProcWorker
+        caplog, "CLEAN", CleanProcWorker, config
     )
     assert num_failed == 0
     assert num_terminated == 0
@@ -414,11 +476,11 @@ class FailProcWorker(ProcWorker):
         raise ValueError("main func value error")
 
 
-def test_main_context_stop_procs_fail(caplog):
+def test_main_context_stop_procs_fail(caplog, config):
 
     caplog.set_level(logging.DEBUG)
     (num_failed, num_terminated), num_still_running = _test_stop_procs(
-        caplog, "FAIL", FailProcWorker
+        caplog, "FAIL", FailProcWorker, config
     )
     assert num_failed == 1
     assert num_terminated == 0
@@ -449,25 +511,29 @@ class HangingProcWorkerHard(ProcWorker):
                 num_terminates += 1
 
 
-def _test_main_context_hang(cap_log, is_hard):
+def _test_main_context_hang(cap_log, is_hard, config):
     if is_hard:
-        return _test_stop_procs(cap_log, "HANG", HangingProcWorkerHard)
+        return _test_stop_procs(cap_log, "HANG", HangingProcWorkerHard, config)
     else:
-        return _test_stop_procs(cap_log, "HANG_Soft", HangingProcWorker)
+        return _test_stop_procs(cap_log, "HANG_Soft", HangingProcWorker, config)
 
 
-def test_main_context_stop_procs_hung_hard(caplog):
+def test_main_context_stop_procs_hung_hard(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_main_context_hang(
-        caplog, is_hard=True
+        caplog,
+        config=config,
+        is_hard=True,
     )
     assert num_failed == 0
     assert num_terminated == 0
     assert num_still_running == 1
 
 
-def test_main_context_stop_procs_hung_soft(caplog):
+def test_main_context_stop_procs_hung_soft(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_main_context_hang(
-        caplog, is_hard=False
+        caplog,
+        config=config,
+        is_hard=False,
     )
     assert num_failed == 0
     assert num_terminated == 1

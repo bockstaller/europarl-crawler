@@ -1,3 +1,4 @@
+import configparser
 import datetime
 import logging
 import multiprocessing
@@ -35,26 +36,12 @@ MAX_SLEEP_SECS = 0.02
 
 def main():
     # TODO: configure Loglevel with .env
+    config = read_config()
 
-    load_dotenv(override=True)
+    with MainContext(config) as main_ctx:
 
-    db = DBInterface(
-        name=os.getenv("EUROPARL_DB_NAME"),
-        user=os.getenv("EUROPARL_DB_USER"),
-        password=os.getenv("EUROPARL_DB_PASSWORD"),
-        host=os.getenv("EUROPARL_DB_HOST"),
-        port=os.getenv("EUROPARL_DB_PORT"),
-    )
+        create_table_structure(main_ctx.config)
 
-    for table in tables:
-        table_inst = table(db)
-        if not table_inst.table_exists():
-            table_inst.create_table()
-        del table_inst
-
-    db.close()
-
-    with MainContext() as main_ctx:
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
@@ -62,17 +49,64 @@ def main():
         token_bucket_q = main_ctx.MPQueue(100)
         url_q = main_ctx.MPQueue(10)
 
-        main_ctx.Proc("DATE_URL_GEN", DateUrlGenerator, url_q, db)
-        main_ctx.Proc("TOKEN_GEN", TokenBucketWorker, token_bucket_q, db)
-        main_ctx.Proc("SESSION_DAY", SessionDayChecker, token_bucket_q, db)
-        main_ctx.Proc("DOWNLOADER_0", DocumentDownloader, token_bucket_q, url_q, db)
-        main_ctx.Proc("DOWNLOADER_1", DocumentDownloader, token_bucket_q, url_q, db)
-        main_ctx.Proc("DOWNLOADER_2", DocumentDownloader, token_bucket_q, url_q, db)
+        main_ctx.Proc(
+            url_q,
+            name="DateUrlGenerator",
+            worker_class=DateUrlGenerator,
+            config=config["DateUrlGenerator"],
+        )
+        main_ctx.Proc(
+            token_bucket_q,
+            name="TokenGenerator",
+            worker_class=TokenBucketWorker,
+            config=config["TokenBucketWorker"],
+        )
+        main_ctx.Proc(
+            token_bucket_q,
+            name="SessionDayChecker",
+            worker_class=SessionDayChecker,
+            config=config["SessionDayChecker"],
+        )
+
+        for instance_id in range(int(config["Downloader"].get("Instances", 1))):
+            main_ctx.Proc(
+                token_bucket_q,
+                url_q,
+                name="Downloader_{}".format(instance_id),
+                worker_class=DocumentDownloader,
+                config=config["Downloader"],
+            )
 
         while not main_ctx.shutdown_event.is_set():
             event = main_ctx.event_queue.safe_get()
             if not event:
                 continue
+
+
+def read_config():
+    config = configparser.ConfigParser()
+    config.read("settings.ini")
+    return config
+
+
+def create_table_structure(config):
+    print(list(config["General"].keys()))
+
+    temp_db = DBInterface(
+        name=config["General"]["dbname"],
+        user=config["General"]["dbuser"],
+        password=config["General"]["dbpassword"],
+        host=config["General"]["dbhost"],
+        port=config["General"]["dbport"],
+    )
+
+    for table in tables:
+        table_inst = table(temp_db)
+        if not table_inst.table_exists():
+            table_inst.create_table()
+        del table_inst
+
+    temp_db.close()
 
 
 if __name__ == "__main__":

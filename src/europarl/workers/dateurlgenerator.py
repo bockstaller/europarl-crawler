@@ -1,7 +1,7 @@
 import time
 from queue import Full
 
-from europarl.db import SessionDay, URLs
+from europarl.db import DBInterface, SessionDay, URLs
 from europarl.mptools import ProcWorker
 from europarl.rules import HtmlProtocol, PdfProtocol
 
@@ -10,14 +10,25 @@ class DateUrlGenerator(ProcWorker):
     DEFAULT_POLLING_TIMEOUT = 0.2
 
     def init_args(self, args):
-        (self.url_q, self.db) = args
+        (self.url_q,) = args
 
     def startup(self):
         super().startup()
-        self.db.connection_name = self.db.connection_name + " - DateURLGenerator"
+
+        self.db = DBInterface(
+            name=self.config["dbname"],
+            user=self.config["dbuser"],
+            password=self.config["dbpassword"],
+            host=self.config["dbhost"],
+            port=self.config["dbport"],
+        )
+
+        self.db.connection_name = self.name
+
         self.urls = URLs(self.db)
 
         rules = [HtmlProtocol, PdfProtocol]
+
         self.rules = []
         for rule in rules:
             inst = rule()
