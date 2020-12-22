@@ -25,6 +25,7 @@ psycopg2-binary = "*"
 pytest = "*"
 requests-futures = "*"
 beautifulsoup4 = "*"
+pytest-cov = "*"
 
 [scripts]
 test = "python -m pytest ."

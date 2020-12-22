@@ -46,7 +46,7 @@ def test_table_not_exists(db_interface):
 )
 @pytest.mark.parametrize(
     "content_uuid",
-    [str(uuid.uuid4())],
+    ["c12bdabf-672d-4ca7-ac06-4b788f2a7a96"],
 )
 @pytest.mark.parametrize(
     "url",
@@ -93,3 +93,31 @@ def test_Request_mark_as_requested_get_request_log(
     assert row[3] == requested_at
     assert row[4] == content_uuid
     assert row[5] == url_id
+
+
+def test_get_status_code_summary(db_interface):
+    request = Request(db_interface)
+    timestamp = []
+    now = datetime.now(tz=timezone.utc)
+    for i in range(-10, 10):
+        ts = now + timedelta(seconds=i)
+        timestamp.append(ts)
+        request.mark_as_requested(
+            status_code=200,
+            requested_url="www.internet.de",
+            final_url="www.internet.de",
+            requested_at=ts,
+        )
+
+    result = request.get_status_code_summary(timestamp[0], timestamp[-1])
+    assert result[200] == 20
+    result = request.get_status_code_summary(timestamp[1], timestamp[-2])
+    assert result[200] == 18
+    result = request.get_status_code_summary(
+        timestamp[-1], timestamp[-1] + timedelta(seconds=60)
+    )
+    assert result[200] == 1
+    result = request.get_status_code_summary(
+        timestamp[0] - timedelta(seconds=60), timestamp[0]
+    )
+    assert result[200] == 1
