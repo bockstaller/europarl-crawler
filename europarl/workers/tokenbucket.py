@@ -11,7 +11,7 @@ class TokenBucketWorker(TimerProcWorker):
 
     """
 
-    MIN_INTERVAL_SECS = 0.2
+    MIN_INTERVAL_SECS = 3
     INTERVAL_SECS = MIN_INTERVAL_SECS
     DEFAULT_POLLING_TIMEOUT = 0.1
     THROTTLING_INTERVAL = 1
@@ -82,12 +82,14 @@ class TokenBucketWorker(TimerProcWorker):
         Args:
             status_codes (list(int)): List of status_codes as integers
         """
-        if any(item in [408, 429] for item in status_codes):
-            self.logger.info("Requesting throttling because of server rate limiting.")
+        if any(int(item) in [408, 429] for item in status_codes):
+            self.logger.warning(
+                "Requesting throttling because of server rate limiting."
+            )
             self.throttle()
             return
-        if any(item in list(range(500, 599)) for item in status_codes):
-            self.logger.info("Requesting throttling because of server errors.")
+        if any(int(item) in list(range(500, 599)) for item in status_codes):
+            self.logger.warning("Requesting throttling because of server errors.")
             self.throttle()
             return
         self.logger.info("Requesting unthrottling")

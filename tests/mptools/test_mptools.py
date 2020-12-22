@@ -10,8 +10,9 @@ import os
 import signal
 import time
 
-import europarl.mptools as mptools
 import pytest
+
+import europarl.mptools as mptools
 from europarl.mptools import (
     MainContext,
     MPQueue,

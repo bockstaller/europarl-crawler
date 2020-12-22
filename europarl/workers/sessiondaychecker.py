@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from multiprocessing.queues import Full
 
 import requests
+
 from europarl.db import DBInterface, Request, SessionDay
 from europarl.mptools import QueueProcWorker
 from europarl.rules import PdfProtocol

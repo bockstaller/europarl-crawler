@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
 import pytest
+
 from europarl.db.interface import DBInterface
 from europarl.mptools import (
     EventMessage,
@@ -18,14 +19,6 @@ from europarl.mptools import (
     init_signals,
 )
 from europarl.workers import SessionDayChecker
-
-
-@pytest.fixture
-def config():
-    # TODO modify settings.ini to use in tests
-    config = configparser.ConfigParser()
-    config.read("settings.ini")
-    return config
 
 
 @pytest.fixture
@@ -171,7 +164,7 @@ def test_set_sleep(sessiondaychecker_instance):
         ),
     ],
 )
-def test_crawl(sessiondaychecker_instance, status_code, sleep_set):
+def test_crawl(sessiondaychecker_instance, db_interface, status_code, sleep_set):
     sd = sessiondaychecker_instance
     sd.startup()
 
@@ -195,3 +188,5 @@ def test_crawl(sessiondaychecker_instance, status_code, sleep_set):
         == "https://europarl.europa.eu/doceo/document/PV-9-2020-12-10_EN.pdf"
     )
     assert real_url == "www.internet.de"
+
+    sd.shutdown()

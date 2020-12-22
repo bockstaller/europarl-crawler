@@ -11,6 +11,6 @@
             "program": "${workspaceFolder}/src/europarl/main.py",
             "cwd": "${workspaceFolder}/src/europarl/",
             "console": "integratedTerminal"
-        }
+        },
     ]
 }

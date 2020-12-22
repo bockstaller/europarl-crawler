@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
 import pytest
+
 from europarl.db import DBInterface, Request
 from europarl.mptools import (
     EventMessage,
@@ -22,15 +23,7 @@ from europarl.workers import TokenBucketWorker
 
 
 @pytest.fixture
-def config():
-
-    config = configparser.ConfigParser()
-    config.read("settings.ini")
-    return config
-
-
-@pytest.fixture
-def tokenbucket_instance(request, db_interface_module, config):
+def tokenbucket_instance(request, db_interface, config):
     # db = db_interface_module
 
     with MainContext(config) as main_ctx:

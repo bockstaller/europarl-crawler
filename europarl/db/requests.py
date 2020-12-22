@@ -36,7 +36,7 @@ class Request(Table):
         content_uuid=None,
         url_id=None,
     ):
-        query = """ INSERT INTO requests(status_code, requested_url, final_url, requested_at, content, url_id)
+        query = """ INSERT INTO public.requests(status_code, requested_url, final_url, requested_at, content, url_id)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """
@@ -53,12 +53,13 @@ class Request(Table):
                     url_id,
                 ],
             )
-            return db.cur.fetchone()
+            value = db.cur.fetchone()
+        return value
 
     def get_status_code_summary(self, start_time, end_time):
         query = """ SELECT status_code
-                    FROM   requests
-                    WHERE  requested_at BETWEEN %s AND %s ;"""
+                    FROM   public.requests
+                    WHERE  requested_at BETWEEN SYMMETRIC %s AND %s ;"""
 
         with self.db.cursor() as db:
             db.cur.execute(

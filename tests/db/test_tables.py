@@ -1,6 +1,7 @@
 import pytest
-from europarl.db import SessionDay
 from psycopg2 import sql
+
+from europarl.db import SessionDay
 
 
 def test_table_exists(db_interface):

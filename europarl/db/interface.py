@@ -13,7 +13,18 @@ class DBInterface:
     - implements a custom context manager
     """
 
-    def __init__(self, name, user, password, host="localhost", port=5432):
+    connection_name = "europarl-crawler"
+    connection = None
+
+    def __init__(
+        self,
+        name=None,
+        user=None,
+        password=None,
+        host=None,
+        port=None,
+        config=None,
+    ):
         """Creates a DBInterface instance
         Stores the connection details in the instance and
         exists.
@@ -26,13 +37,18 @@ class DBInterface:
             host string: hostname/adress to connect to
             port number: host port to connect to
         """
-        self.connection_name = "europarl-crawler"
-        self.name = name
-        self.user = user
-        self.password = password
-        self.host = host
-        self.port = port
-        self.connection = None
+        if config:
+            self.name = config["dbname"]
+            self.user = config["dbuser"]
+            self.password = config["dbpassword"]
+            self.host = config["dbhost"]
+            self.port = config["dbport"]
+        else:
+            self.name = name
+            self.user = user
+            self.password = password
+            self.host = host
+            self.port = port
 
     def connect(self):
         """Creates a db connection and stores it in the instance

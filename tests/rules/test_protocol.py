@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+
 from europarl.rules import HtmlProtocol, PdfProtocol
 
 
