@@ -123,6 +123,8 @@ class URLs(Table):
                 )
                 url.url_id = db.cur.fetchone()[0]
 
+        return derived_urls
+
     def mark_as_crawled(self, url):
         query = """
                     UPDATE urls
