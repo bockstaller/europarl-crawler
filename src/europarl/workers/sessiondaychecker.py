@@ -46,6 +46,7 @@ class SessionDayChecker(QueueProcWorker):
         Cleans up by closing the requests-session and deleting the
         sessionDay which will close the database connection
         """
+        super().shutdown()
         self.session.close()
         del self.sessionDay
 
@@ -159,7 +160,7 @@ class SessionDayChecker(QueueProcWorker):
         # get a date value to operate on and start sleeping cycle if db doesn't return a value
         date = self.get_new_date()
         if date is not None:
-            self.logger.info("Checking date: {}".format(date))
+            self.logger.debug("Checking date: {}".format(date))
         else:
             self.logger.debug("Database returned no unchecked dates, Retrying")
             return

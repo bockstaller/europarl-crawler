@@ -127,7 +127,7 @@ class TokenBucketWorker(TimerProcWorker):
 
         try:
             self.token_bucket_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
-            self.logger.info("Enqueued token: {}".format(token))
+            self.logger.debug("Enqueued token: {}".format(token))
             self.check_throttling(datetime.now(tz=timezone.utc))
         except Full:
             self.logger.debug("Queue full. - Discarding token: {}".format(token))

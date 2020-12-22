@@ -50,18 +50,6 @@ def main():
         url_q = main_ctx.MPQueue(10)
 
         main_ctx.Proc(
-            url_q,
-            name="DateUrlGenerator",
-            worker_class=DateUrlGenerator,
-            config=config["DateUrlGenerator"],
-        )
-        main_ctx.Proc(
-            token_bucket_q,
-            name="TokenGenerator",
-            worker_class=TokenBucketWorker,
-            config=config["TokenBucketWorker"],
-        )
-        main_ctx.Proc(
             token_bucket_q,
             name="SessionDayChecker",
             worker_class=SessionDayChecker,
@@ -76,6 +64,19 @@ def main():
                 worker_class=DocumentDownloader,
                 config=config["Downloader"],
             )
+
+        main_ctx.Proc(
+            url_q,
+            name="DateUrlGenerator",
+            worker_class=DateUrlGenerator,
+            config=config["DateUrlGenerator"],
+        )
+        main_ctx.Proc(
+            token_bucket_q,
+            name="TokenGenerator",
+            worker_class=TokenBucketWorker,
+            config=config["TokenBucketWorker"],
+        )
 
         while not main_ctx.shutdown_event.is_set():
             event = main_ctx.event_queue.safe_get()

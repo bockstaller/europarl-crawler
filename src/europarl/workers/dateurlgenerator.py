@@ -45,32 +45,42 @@ class DateUrlGenerator(ProcWorker):
 
     def apply_rules(self, date):
         urls = []
-        print(date)
         for rule in self.rules:
-            urls.append(rule.get_url(date))
+            new_url = rule.get_url(date)
+            urls.append(new_url)
+            self.logger.debug("Appended url: {}".format(new_url))
         return urls
 
     def main_func(self):
 
         if len(self.derived_urls) == 0:
+            self.logger.debug("Getting new date")
             try:
                 date = self.urls.dates_with_less_derived_urls_than(
                     amount_rules=len(self.rules), limit=1
                 )[0]
+                self.logger.debug("Got date {} from database".format(date))
             except IndexError:
                 time.sleep(self.DEFAULT_POLLING_TIMEOUT)
+                self.logger.debug("Got no new URL from database")
                 return
 
+            self.logger.info("Deriving URLs for date: {}".format(date))
             self.derived_urls = self.apply_rules(date)
-            assert len(self.derived_urls) == len(self.rules)
+            self.logger.debug(
+                "Derived the following URLs: {}".format(self.derived_urls)
+            )
             self.urls.mark_as_generated(self.derived_urls)
+            self.logger.debug("Marked derived urls as generated.")
             return
 
         try:
             if not self.url:
+                self.logger.debug("Getting new url to queue up")
                 self.url = self.derived_urls.pop()
+            self.logger.debug("Queueing up URL: {}".format(self.url))
             self.url_q.put(self.url, timeout=self.DEFAULT_POLLING_TIMEOUT)
-            self.logger.info("Queued up url:{}".format(self.url.url))
+            self.logger.info("Queued up url: {}".format(self.url.url))
             self.url = None
         except Full:
             return
