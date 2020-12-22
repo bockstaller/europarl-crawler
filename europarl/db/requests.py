@@ -15,7 +15,7 @@ class Request(Table):
                             url_id integer,
                             requested_at timestamp with time zone,
                             status_code integer,
-                            content uuid,
+                            content_uuid uuid,
                             requested_url varchar(2000),
                             final_url varchar(2000),
                             CONSTRAINT requests_pkey PRIMARY KEY (id),
@@ -27,6 +27,19 @@ class Request(Table):
                             ON public.requests USING btree
                             (requested_at DESC NULLS LAST)"""
 
+    def get_request_log(self, id):
+        query = """ SELECT status_code, requested_url, final_url, requested_at, content_uuid, url_id
+                    FROM public.requests
+                    WHERE id = %s
+        """
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [id],
+            )
+            value = db.cur.fetchone()
+        return value
+
     def mark_as_requested(
         self,
         status_code,
@@ -36,7 +49,7 @@ class Request(Table):
         content_uuid=None,
         url_id=None,
     ):
-        query = """ INSERT INTO public.requests(status_code, requested_url, final_url, requested_at, content, url_id)
+        query = """ INSERT INTO public.requests(status_code, requested_url, final_url, requested_at, content_uuid, url_id)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """
@@ -53,7 +66,7 @@ class Request(Table):
                     url_id,
                 ],
             )
-            value = db.cur.fetchone()
+            value = db.cur.fetchone()[0]
         return value
 
     def get_status_code_summary(self, start_time, end_time):
