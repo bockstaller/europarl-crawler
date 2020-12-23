@@ -57,3 +57,10 @@ def test_get_rule_by_nothing(db_interface):
 def test_get_non_existent_rule(db_interface):
     rules = Rules(db_interface)
     assert rules.get_rule(id=10) is None
+
+
+def test_register_rule_multiple_times(db_interface):
+    rules = Rules(db_interface)
+    id_0 = rules.register_rule("Abc")
+    id_1 = rules.register_rule("Abc")
+    assert id_0 == id_1

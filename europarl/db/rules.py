@@ -32,6 +32,9 @@ class Rules(Table):
         """
         query = """ INSERT INTO rules(rulename)
                     VALUES (%s)
+                    ON CONFLICT (rulename)
+                    DO
+                        UPDATE SET rulename=%s
                     RETURNING id
                 """
         rulename = str(rulename)
@@ -39,7 +42,7 @@ class Rules(Table):
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [rulename],
+                [rulename, rulename],
             )
             value = db.cur.fetchone()[0]
         return value
