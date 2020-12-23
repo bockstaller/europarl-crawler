@@ -70,7 +70,7 @@ class DateUrlGenerator(ProcWorker):
             self.logger.debug(
                 "Derived the following URLs: {}".format(self.derived_urls)
             )
-            self.urls.mark_as_generated(self.derived_urls)
+            self.derived_urls = self.urls.mark_as_generated(self.derived_urls)
             self.logger.debug("Marked derived urls as generated.")
             return
 

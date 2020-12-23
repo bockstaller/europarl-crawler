@@ -6,6 +6,12 @@ from .tables import Table
 
 
 class URL:
+    """
+    URL object for passing around via queues
+    """
+
+    # TODO drop date, url and file ending elements and use only the _id fields in all places where URL is used
+
     date_id = None
     rule_id = None
     url_id = None
@@ -14,6 +20,17 @@ class URL:
     file_ending = None
 
     def __init__(self, date_id, rule_id, url, date=None, url_id=None, file_ending=None):
+        """
+        Initializes a URL object
+
+        Args:
+            date_id (int): Database id of the date from which this url was derived
+            rule_id (int): Database id of the rule from which this url was derived
+            url (string): String of the url
+            date (datetime.date, optional): Defaults to None.
+            url_id (integer, optional): Defaults to None.
+            file_ending (str, optional): Defaults to None.
+        """
         self.date_id = date_id
         self.rule_id = rule_id
         self.url_id = url_id
@@ -81,6 +98,18 @@ class URLs(Table):
 """
 
     def dates_with_less_derived_urls_than(self, amount_rules, limit):
+        """
+        Returns dates which do not have the necessary amount of urls generated. This is for example the case if a new rule is added and now rules where derived up unitl now.
+
+        Args:
+            amount_rules (int): current amount of rules
+            limit (int): amount of dates that should be returned
+
+        Returns:
+            [dict]: List of dicts with the keys date_id (primary key of the date) and date (datetime.date object)
+        """
+        # TODO compute amount of rules on the fly and change whereever it is used
+
         query = """SELECT session_days.id ,session_days.dates
                     FROM session_days
                     FULL OUTER JOIN urls ON session_days.id = urls.date_id
@@ -98,6 +127,16 @@ class URLs(Table):
         return result
 
     def mark_as_generated(self, derived_urls):
+        """
+        Stores a url as generated
+
+        Args:
+            derived_urls ([URL]): list of URL-objects that should be stored
+
+        Returns:
+            [URL]: list of updated URL-objects now containing updated url objects
+        """
+
         query = """ INSERT INTO urls(date_id, rule_id, url, created_at)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (digest(url, 'sha512'::text))
@@ -106,6 +145,7 @@ class URLs(Table):
                         WHERE urls.url = %s
                     RETURNING id
                 """
+        updated_derived_urls = []
 
         for url in derived_urls:
             with self.db.cursor() as db:
@@ -122,11 +162,23 @@ class URLs(Table):
                         url.url,
                     ],
                 )
-                url.url_id = db.cur.fetchone()[0]
+                result = db.cur.fetchone()
+                if result:
+                    url.url_id = result[0]
+                    updated_derived_urls.append(url)
 
-        return derived_urls
+        return updated_derived_urls
 
     def mark_as_crawled(self, url):
+        """
+        Marks a url as already crawled
+
+        Args:
+            url (URL): URL-object to update in the database
+
+        Returns:
+            int: id of updated url element
+        """
         query = """
                     UPDATE urls
                     SET crawled = 'true', crawled_at = %s
@@ -145,6 +197,9 @@ class URLs(Table):
             return None
 
     def drop_uncrawled_urls(self):
+        """
+        Removes all uncrawled urls from the database
+        """
         query = """ DELETE FROM {schema}.{table}
                     WHERE crawled = false;
                 """
