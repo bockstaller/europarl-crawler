@@ -3,7 +3,7 @@ from europarl.db.url import URL
 from .rule import Rule
 
 
-class Protocol(Rule):
+class WordProtocol(Rule):
     format = ""
     language = ""
 
@@ -11,7 +11,7 @@ class Protocol(Rule):
     def use_rule(cls, date):
         document_url = (
             cls.BASE_URL
-            + "PV-"
+            + "CRE-"
             + cls.get_term(date)
             + "-"
             + date.strftime("%Y-%m-%d")
@@ -31,21 +31,21 @@ class Protocol(Rule):
         )
 
 
-class PdfProtocol(Protocol):
+class PdfWordProtocolEN(WordProtocol):
     format = ".pdf"
     language = "EN"
 
 
-class HtmlProtocol(Protocol):
-    format = ".html"
-    language = "EN"
-
-
-class PdfProtocolDE(Protocol):
+class PdfWordProtocolDE(WordProtocol):
     format = ".pdf"
     language = "DE"
 
 
-class HtmlProtocolDE(Protocol):
+class HtmlWordProtocolEN(WordProtocol):
+    format = ".html"
+    language = "EN"
+
+
+class HtmlWordProtocolDE(WordProtocol):
     format = ".html"
     language = "DE"

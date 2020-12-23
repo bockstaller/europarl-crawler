@@ -3,7 +3,16 @@ from queue import Full
 
 from europarl.db import DBInterface, SessionDay, URLs
 from europarl.mptools import ProcWorker
-from europarl.rules import HtmlProtocol, PdfProtocol
+from europarl.rules import (
+    HtmlProtocol,
+    HtmlProtocolDE,
+    HtmlWordProtocolDE,
+    HtmlWordProtocolEN,
+    PdfProtocol,
+    PdfProtocolDE,
+    PdfWordProtocolDE,
+    PdfWordProtocolEN,
+)
 
 
 class DateUrlGenerator(ProcWorker):
@@ -18,7 +27,16 @@ class DateUrlGenerator(ProcWorker):
 
         self.urls = URLs(self.db)
 
-        rules = [HtmlProtocol, PdfProtocol]
+        rules = [
+            HtmlProtocol,
+            HtmlProtocolDE,
+            HtmlWordProtocolDE,
+            HtmlWordProtocolEN,
+            PdfProtocol,
+            PdfProtocolDE,
+            PdfWordProtocolDE,
+            PdfWordProtocolEN,
+        ]
 
         self.rules = []
         for rule in rules:
