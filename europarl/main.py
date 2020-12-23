@@ -36,10 +36,9 @@ MAX_SLEEP_SECS = 0.02
 
 
 def main():
-    # TODO: configure Loglevel with .env
     config = read_config()
 
-    with MainContext(config) as main_ctx:
+    with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
 
@@ -112,16 +111,11 @@ def create_table_structure(config):
 
 class Context(MainContext):
     def stop_procs(self):
-        super().stop_procs()
-        temp_db = DBInterface(
-            name=self.config["General"]["dbname"],
-            user=self.config["General"]["dbuser"],
-            password=self.config["General"]["dbpassword"],
-            host=self.config["General"]["dbhost"],
-            port=self.config["General"]["dbport"],
-        )
+        super(Context, self).stop_procs()
+        temp_db = DBInterface(config=self.config["General"])
         urls = URLs(temp_db)
         # drop uncrawled urls last to prevent race conditions
+        self.logger.info("Dropping uncrawled urls")
         urls.drop_uncrawled_urls()
 
 
