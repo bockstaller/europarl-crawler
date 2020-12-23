@@ -120,4 +120,5 @@ class SessionDay(Table):
                     date,
                 ],
             )
-            return db.cur.fetchone()
+            value = db.cur.fetchone()[0]
+        return value

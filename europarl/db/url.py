@@ -94,7 +94,8 @@ class URLs(Table):
                 query,
                 [amount_rules, limit],
             )
-            return [{"date_id": x[0], "date": x[1]} for x in db.cur.fetchall()]
+            result = [{"date_id": x[0], "date": x[1]} for x in db.cur.fetchall()]
+        return result
 
     def mark_as_generated(self, derived_urls):
         query = """ INSERT INTO urls(date_id, rule_id, url, created_at)
@@ -138,6 +139,10 @@ class URLs(Table):
                 query,
                 [datetime.now(tz=timezone.utc), url.url_id, url.url],
             )
+            result = db.cur.fetchone()
+            if result:
+                return result[0]
+            return None
 
     def drop_uncrawled_urls(self):
         query = """ DELETE FROM {schema}.{table}
