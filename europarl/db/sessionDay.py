@@ -29,10 +29,6 @@ class SessionDay(Table):
             was this url checked
         checked_at: timestamp utc
             when was this url last checked
-        urls_created : boolean
-            True if a url generator has already derived urls from the date
-        urls_created_ts: datetime
-            When did a url generator derive urls from the date
 
     """
 
