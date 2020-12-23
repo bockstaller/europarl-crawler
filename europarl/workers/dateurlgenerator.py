@@ -41,7 +41,6 @@ class DateUrlGenerator(ProcWorker):
 
     def shutdown(self):
         super().shutdown()
-        self.urls.drop_uncrawled_urls()
 
     def apply_rules(self, date):
         urls = []

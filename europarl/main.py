@@ -13,7 +13,7 @@ from queue import Full
 import requests
 from dotenv import load_dotenv
 
-from europarl.db import DBInterface, SessionDay, tables
+from europarl.db import DBInterface, SessionDay, URLs, tables
 from europarl.mptools import (
     EventMessage,
     MainContext,
@@ -87,7 +87,7 @@ def main():
 
 def read_config():
     config = configparser.ConfigParser()
-    config.read("settings.ini")
+    config.read("../settings.ini")
     return config
 
 
@@ -108,6 +108,21 @@ def create_table_structure(config):
         del table_inst
 
     temp_db.close()
+
+
+class Context(MainContext):
+    def stop_procs(self):
+        super().stop_procs()
+        temp_db = DBInterface(
+            name=self.config["General"]["dbname"],
+            user=self.config["General"]["dbuser"],
+            password=self.config["General"]["dbpassword"],
+            host=self.config["General"]["dbhost"],
+            port=self.config["General"]["dbport"],
+        )
+        urls = URLs(temp_db)
+        # drop uncrawled urls last to prevent race conditions
+        urls.drop_uncrawled_urls()
 
 
 if __name__ == "__main__":
