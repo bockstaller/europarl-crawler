@@ -33,11 +33,13 @@ class DocumentDownloader(QueueProcWorker):
 
         self.PATH = self.config["Path"]
 
-        self.db = DBInterface(self.config)
+        self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
 
         self.request = Request(self.db)
         self.url = URLs(self.db)
+
+        self.logger.info("{} started".format(self.name))
 
     def shutdown(self):
         """"""

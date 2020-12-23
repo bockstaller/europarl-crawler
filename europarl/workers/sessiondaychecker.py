@@ -39,6 +39,8 @@ class SessionDayChecker(QueueProcWorker):
 
         self.sleep_end = datetime.now(timezone.utc) - timedelta(hours=1)
 
+        self.logger.info("{} started".format(self.name))
+
     def shutdown(self):
         """
         Cleans up by closing the requests-session and deleting the

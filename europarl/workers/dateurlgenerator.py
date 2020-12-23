@@ -29,6 +29,7 @@ class DateUrlGenerator(ProcWorker):
         self.dates_to_convert = []
         self.derived_urls = []
         self.url = None
+        self.logger.info("{} started".format(self.name))
 
     def shutdown(self):
         super().shutdown()

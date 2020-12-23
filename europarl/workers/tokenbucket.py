@@ -43,6 +43,8 @@ class TokenBucketWorker(TimerProcWorker):
             seconds=self.INTERVAL_SECS * self.THROTTLING_FACTOR
         )
 
+        self.logger.info("{} started".format(self.name))
+
     def throttle(self):
         """
         Each call of throttle doubles the INTERVAL_SECS value, resulting in doubling the time necessary to generate a token. The upper limmit is currentle 2^16*MIN_INTERVAL_SECS.
