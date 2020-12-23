@@ -30,6 +30,14 @@ from europarl.mptools import (
 )
 
 
+@pytest.fixture()
+def mp_config():
+    config = configparser.ConfigParser()
+    config["Test"] = {"DefaultPollingTimeout": 0.1}
+    conf = config["Test"]
+    return conf
+
+
 def test_mpqueue_get():
     Q = MPQueue()
 
@@ -56,14 +64,6 @@ def test_queue_put():
 
     num_left = Q.safe_close()
     assert num_left == 2
-
-
-@pytest.fixture
-def config():
-    config = configparser.ConfigParser()
-    config["DEFAULT"] = {"logLevel": "INFO"}
-    config["General"] = {}
-    return config
 
 
 def test_drain_queue():
@@ -116,15 +116,15 @@ def test_signal_handling():
     assert so.shutdown_event.is_set()
 
 
-def test_proc_worker_bad_args():
-    config = configparser.ConfigParser()
+def test_proc_worker_bad_args(mp_config):
     with pytest.raises(ValueError):
         ProcWorker(
             "TEST",
             1,
             2,
             3,
-            config,
+            4,
+            mp_config,
             "ARG1",
             "ARG2",
         )
@@ -139,24 +139,24 @@ class ProcWorkerTest(ProcWorker):
         self.shutdown_event.set()
 
 
-def test_proc_worker_good_args():
+def test_proc_worker_good_args(mp_config):
     logger_q = MPQueue()
-    config = configparser.ConfigParser()
+
     pw = ProcWorkerTest(
         "TEST",
         1,
         2,
         3,
         logger_q,
-        config,
+        mp_config,
         "ARG1",
         "ARG2",
     )
     assert pw.args == ("ARG1", "ARG2")
 
 
-def test_proc_worker_init_signals():
-    config = configparser.ConfigParser()
+def test_proc_worker_init_signals(mp_config):
+    config = mp_config
     pid = os.getpid()
     evt = mp.Event()
     logger_q = MPQueue()
@@ -181,12 +181,12 @@ def test_proc_worker_init_signals():
     assert so.shutdown_event.is_set()
 
 
-def test_proc_worker_no_main_func(caplog):
+def test_proc_worker_no_main_func(caplog, mp_config):
     startup_evt = mp.Event()
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
-    config = configparser.ConfigParser()
+    config = mp_config
 
     try:
         caplog.set_level(logging.INFO)
@@ -198,12 +198,12 @@ def test_proc_worker_no_main_func(caplog):
         event_q.safe_close()
 
 
-def test_proc_worker_run(caplog):
+def test_proc_worker_run(caplog, mp_config):
     startup_evt = mp.Event()
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
-    config = configparser.ConfigParser()
+    config = mp_config
 
     caplog.set_level(logging.INFO)
     pw = ProcWorkerTest(
@@ -225,13 +225,18 @@ def test_proc_worker_run(caplog):
 
 
 def _proc_worker_wrapper_helper(
-    caplog, worker_class, args=None, expect_shutdown_evt=True, alarm_secs=1.0
+    caplog,
+    worker_class,
+    mp_config,
+    args=None,
+    expect_shutdown_evt=True,
+    alarm_secs=1.0,
 ):
     startup_evt = mp.Event()
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
-    config = configparser.ConfigParser()
+    config = mp_config
     if args is None:
         args = ()
 
@@ -265,13 +270,15 @@ def _proc_worker_wrapper_helper(
     return items[:-1]
 
 
-def test_proc_worker_wrapper(caplog):
-    items = _proc_worker_wrapper_helper(caplog, ProcWorkerTest, ("ARG1", "ARG2"))
+def test_proc_worker_wrapper(caplog, mp_config):
+    items = _proc_worker_wrapper_helper(
+        caplog, ProcWorkerTest, mp_config, ("ARG1", "ARG2")
+    )
     assert not items
     assert "MAIN_FUNC: ('ARG1', 'ARG2')" in caplog.text
 
 
-def test_proc_worker_exception(caplog):
+def test_proc_worker_exception(caplog, mp_config):
     class ProcWorkerException(ProcWorker):
         def main_func(self):
             raise NameError("Because this doesn't happen often")
@@ -280,7 +287,7 @@ def test_proc_worker_exception(caplog):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
-    config = configparser.ConfigParser()
+    config = mp_config
 
     caplog.set_level(logging.INFO)
     with pytest.raises(SystemExit):
@@ -290,8 +297,8 @@ def test_proc_worker_exception(caplog):
             startup_evt,
             shutdown_evt,
             event_q,
-            config,
             logger_q,
+            config,
         )
     assert startup_evt.is_set()
     assert not shutdown_evt.is_set()
@@ -315,8 +322,8 @@ class TimerProcWorkerTest(TimerProcWorker):
             self.shutdown_event.set()
 
 
-def test_timer_proc_worker(caplog):
-    items = _proc_worker_wrapper_helper(caplog, TimerProcWorkerTest)
+def test_timer_proc_worker(caplog, mp_config):
+    items = _proc_worker_wrapper_helper(caplog, TimerProcWorkerTest, mp_config)
     assert len(items) == 4
     for idx, item in enumerate(items[:-1]):
         assert item.startswith(f"TIMER {idx + 1} [")
@@ -327,7 +334,7 @@ class QueueProcWorkerTest(QueueProcWorker):
         self.event_q.put(f"DONE {item}")
 
 
-def test_queue_proc_worker(caplog):
+def test_queue_proc_worker(caplog, mp_config):
     work_q = MPQueue()
     work_q.put(1)
     work_q.put(2)
@@ -339,6 +346,7 @@ def test_queue_proc_worker(caplog):
     items = _proc_worker_wrapper_helper(
         caplog,
         QueueProcWorkerTest,
+        mp_config,
         args=(work_q,),
         expect_shutdown_evt=False,
     )
@@ -352,7 +360,7 @@ class StartHangWorker(ProcWorker):
             time.sleep(1.0)
 
 
-def test_proc_start_hangs(caplog, config):
+def test_proc_start_hangs(caplog, mp_config):
 
     shutdown_evt = mp.Event()
     event_q = MPQueue()
@@ -368,13 +376,13 @@ def test_proc_start_hangs(caplog, config):
                 shutdown_event=shutdown_evt,
                 event_q=event_q,
                 logger_q=logger_q,
-                config=config,
+                config=mp_config,
             )
     finally:
         Proc.STARTUP_WAIT_SECS = 3.0
 
 
-def test_proc_full_stop(caplog, config):
+def test_proc_full_stop(caplog, mp_config):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
@@ -385,7 +393,7 @@ def test_proc_full_stop(caplog, config):
         shutdown_event=shutdown_evt,
         event_q=event_q,
         logger_q=logger_q,
-        config=config["General"],
+        config=mp_config,
     )
 
     for idx in range(4):
@@ -409,7 +417,7 @@ class NeedTerminateWorker(ProcWorker):
             time.sleep(1.0)
 
 
-def test_proc_full_stop_need_terminate(caplog, config):
+def test_proc_full_stop_need_terminate(caplog, mp_config):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
     logger_q = MPQueue()
@@ -420,7 +428,7 @@ def test_proc_full_stop_need_terminate(caplog, config):
         shutdown_event=shutdown_evt,
         event_q=event_q,
         logger_q=logger_q,
-        config=config["General"],
+        config=mp_config,
     )
     proc.full_stop(wait_time=0.1)
 
@@ -438,6 +446,7 @@ def test_main_context_stop_queues(config):
 
 def _test_stop_procs(cap_log, proc_name, worker_class, config):
     cap_log.set_level(logging.DEBUG)
+
     with MainContext(config) as mctx:
         mctx.STOP_WAIT_SECS = 0.1
         mctx.Proc(name=proc_name, worker_class=worker_class, config=config["General"])
@@ -461,6 +470,7 @@ class CleanProcWorker(ProcWorker):
 
 
 def test_main_context_stop_procs_clean(caplog, config):
+
     (num_failed, num_terminated), num_still_running = _test_stop_procs(
         caplog, "CLEAN", CleanProcWorker, config
     )
@@ -522,8 +532,8 @@ def _test_main_context_hang(cap_log, is_hard, config):
 def test_main_context_stop_procs_hung_hard(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_main_context_hang(
         caplog,
-        config=config,
         is_hard=True,
+        config=config,
     )
     assert num_failed == 0
     assert num_terminated == 0
@@ -533,8 +543,8 @@ def test_main_context_stop_procs_hung_hard(caplog, config):
 def test_main_context_stop_procs_hung_soft(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_main_context_hang(
         caplog,
-        config=config,
         is_hard=False,
+        config=config,
     )
     assert num_failed == 0
     assert num_terminated == 1

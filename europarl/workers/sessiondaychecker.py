@@ -13,9 +13,10 @@ from europarl.rules import PdfProtocol
 class SessionDayChecker(QueueProcWorker):
 
     PREFETCH_LIMIT = 100
-    NO_WORK_RETRY_TIME = 0.2
-    DEFAULT_POLLING_TIMEOUT = 0.2
-    dates_to_check = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dates_to_check = []
 
     def init_args(self, args):
         (self.work_q,) = args
@@ -26,13 +27,9 @@ class SessionDayChecker(QueueProcWorker):
         """
         super().startup()
 
-        self.db = DBInterface(
-            name=self.config["dbname"],
-            user=self.config["dbuser"],
-            password=self.config["dbpassword"],
-            host=self.config["dbhost"],
-            port=self.config["dbport"],
-        )
+        self.PREFETCH_LIMIT = int(self.config["PrefetchLimit"])
+
+        self.db = DBInterface(config=self.config)
 
         self.db.connection_name = self.name
         self.sessionDay = SessionDay(self.db)

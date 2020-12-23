@@ -84,8 +84,6 @@ def test_check_throttling(
 ):
     tokenbucket_instance.startup()
 
-    tokenbucket_instance.THROTTLING_INTERVAL = throttling_intervall
-
     tokenbucket_instance.request.get_status_code_summary = MagicMock()
     tokenbucket_instance.apply_throttling = MagicMock()
 
@@ -99,7 +97,11 @@ def test_check_throttling(
         calls += 1
         assert tokenbucket_instance.last_check == now
         assert tokenbucket_instance.next_check == (
-            now + timedelta(seconds=throttling_intervall)
+            now
+            + timedelta(
+                seconds=tokenbucket_instance.INTERVAL_SECS
+                * tokenbucket_instance.THROTTLING_FACTOR
+            )
         )
     else:
         assert tokenbucket_instance.last_check == last_check

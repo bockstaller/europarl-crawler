@@ -150,6 +150,8 @@ class ProcWorker:
         self.config = config
         self.terminate_called = 0
 
+        self.DEFAULT_POLLING_TIMEOUT = float(config["DefaultPollingTimeout"])
+
         self.logger = setup_logging(
             name=self.name, logger_q=self.logger_q, config=self.config
         )

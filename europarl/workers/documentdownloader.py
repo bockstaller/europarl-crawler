@@ -15,9 +15,11 @@ from europarl.rules import PdfProtocol
 
 class DocumentDownloader(QueueProcWorker):
 
-    DEFAULT_POLLING_TIMEOUT = 0.2
     PATH = "../data/"
-    url_obj = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.url_obj = None
 
     def init_args(self, args):
         (
@@ -29,15 +31,11 @@ class DocumentDownloader(QueueProcWorker):
         """"""
         super().startup()
 
-        self.db = DBInterface(
-            name=self.config["dbname"],
-            user=self.config["dbuser"],
-            password=self.config["dbpassword"],
-            host=self.config["dbhost"],
-            port=self.config["dbport"],
-        )
+        self.PATH = self.config["Path"]
 
+        self.db = DBInterface(self.config)
         self.db.connection_name = self.name
+
         self.request = Request(self.db)
         self.url = URLs(self.db)
 

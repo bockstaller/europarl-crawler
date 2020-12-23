@@ -12,13 +12,13 @@ class TokenBucketWorker(TimerProcWorker):
     """
 
     MIN_INTERVAL_SECS = 3
-    INTERVAL_SECS = MIN_INTERVAL_SECS
-    DEFAULT_POLLING_TIMEOUT = 0.1
-    THROTTLING_INTERVAL = 1
+    INTERVAL_SECS = 3
 
-    token_nr = 0
-    last_check = None
-    next_check = None
+    def __init__(self, *args, **kwargs):
+        super(TokenBucketWorker, self).__init__(*args, **kwargs)
+        self.token_nr = 0
+        self.last_check = None
+        self.next_check = None
 
     def init_args(self, args):
         (self.token_bucket_q,) = args
@@ -29,19 +29,19 @@ class TokenBucketWorker(TimerProcWorker):
         """
         super().startup()
 
-        self.db = DBInterface(
-            name=self.config["dbname"],
-            user=self.config["dbuser"],
-            password=self.config["dbpassword"],
-            host=self.config["dbhost"],
-            port=self.config["dbport"],
-        )
+        self.MIN_INTERVAL_SECS = int(self.config["MinIntervalSecs"])
+        self.THROTTLING_FACTOR = int(self.config["ThrottlingFactor"])
+        self.INTERVAL_SECS = self.MIN_INTERVAL_SECS
 
+        self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
+
         self.request = Request(self.db)
 
         self.last_check = datetime.now(tz=timezone.utc)
-        self.next_check = self.last_check + timedelta(seconds=self.THROTTLING_INTERVAL)
+        self.next_check = self.last_check + timedelta(
+            seconds=self.INTERVAL_SECS * self.THROTTLING_FACTOR
+        )
 
     def throttle(self):
         """
@@ -113,7 +113,7 @@ class TokenBucketWorker(TimerProcWorker):
 
             self.logger.debug("Setting checking timerange for next iteration")
             self.last_check = now
-            self.next_check = now + timedelta(seconds=self.THROTTLING_INTERVAL)
+            self.next_check = now + timedelta(seconds=self.INTERVAL_SECS * 5)
             self.apply_throttling(status_codes)
 
     def main_func(self):

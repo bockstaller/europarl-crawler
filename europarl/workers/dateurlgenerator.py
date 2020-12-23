@@ -7,22 +7,13 @@ from europarl.rules import HtmlProtocol, PdfProtocol
 
 
 class DateUrlGenerator(ProcWorker):
-    DEFAULT_POLLING_TIMEOUT = 0.2
-
     def init_args(self, args):
         (self.url_q,) = args
 
     def startup(self):
         super().startup()
 
-        self.db = DBInterface(
-            name=self.config["dbname"],
-            user=self.config["dbuser"],
-            password=self.config["dbpassword"],
-            host=self.config["dbhost"],
-            port=self.config["dbport"],
-        )
-
+        self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
 
         self.urls = URLs(self.db)

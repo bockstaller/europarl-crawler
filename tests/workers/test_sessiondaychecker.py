@@ -81,8 +81,8 @@ def test_get_new_date(sessiondaychecker_instance):
 
 def test_get_new_date_from_database_magicmock(sessiondaychecker_instance):
     sd = sessiondaychecker_instance
-    sd.PREFETCH_LIMIT = 10
     sd.startup()
+    sd.PREFETCH_LIMIT = 10
 
     def mock_get_unchecked_days(limit):
         days = []
