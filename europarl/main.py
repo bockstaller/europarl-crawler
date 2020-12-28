@@ -13,7 +13,7 @@ from queue import Full
 import requests
 from dotenv import load_dotenv
 
-from europarl.db import DBInterface, SessionDay, URLs, tables
+from europarl.db import DBInterface, Rules, SessionDay, URLs, tables
 from europarl.mptools import (
     EventMessage,
     MainContext,
@@ -41,6 +41,7 @@ def main():
     with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
+        init_rules(main_ctx.config)
 
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
@@ -92,13 +93,7 @@ def read_config():
 
 def create_table_structure(config):
 
-    temp_db = DBInterface(
-        name=config["General"]["dbname"],
-        user=config["General"]["dbuser"],
-        password=config["General"]["dbpassword"],
-        host=config["General"]["dbhost"],
-        port=config["General"]["dbport"],
-    )
+    temp_db = DBInterface(config=config["General"])
 
     for table in tables:
         table_inst = table(temp_db)
@@ -107,6 +102,12 @@ def create_table_structure(config):
         del table_inst
 
     temp_db.close()
+
+
+def init_rules(config):
+    temp_db = DBInterface(config=config["General"])
+    r = Rules(temp_db)
+    r.register_rules()
 
 
 class Context(MainContext):

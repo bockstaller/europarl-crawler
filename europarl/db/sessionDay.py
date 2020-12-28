@@ -86,7 +86,7 @@ class SessionDay(Table):
             data = [row[0] for row in db.cur.fetchall()]
             return data
 
-    def insert_day(self, date, hit=False):
+    def insert_date(self, date, hit=False):
         query = """ INSERT INTO session_days(dates,hit)
                     VALUES(%s,%s)
                     RETURNING id;
@@ -101,4 +101,17 @@ class SessionDay(Table):
                 ],
             )
             value = db.cur.fetchone()[0]
+        return value
+
+    def get_date(self, id):
+        query = """ SELECT id, dates
+                    FROM session_days
+                    WHERE id = %s"""
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [id],
+            )
+            value = db.cur.fetchone()
         return value
