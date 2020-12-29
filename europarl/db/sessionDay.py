@@ -27,7 +27,6 @@ class SessionDay(Table):
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id SERIAL,
                             dates date NOT NULL,
-                            hit boolean NOT NULL DEFAULT false,
                             CONSTRAINT session_days_pkey PRIMARY KEY (id),
                             CONSTRAINT date_unique UNIQUE (dates)
                           );"""
@@ -37,7 +36,7 @@ class SessionDay(Table):
         limit=10,
         offset=datetime.timedelta(days=30),
         start_date=datetime.date(1994, 1, 1),
-        sessiondayrulename="sessiondayrule",
+        sessiondayrulename="session_day",
     ):
         """
         Returns all dates not stored in the table which match the offset and start_date criteria.
@@ -86,19 +85,19 @@ class SessionDay(Table):
             data = [row[0] for row in db.cur.fetchall()]
             return data
 
-    def insert_date(self, date, hit=False):
-        query = """ INSERT INTO session_days(dates,hit)
-                    VALUES(%s,%s)
+    def insert_date(self, date):
+        query = """ INSERT INTO session_days(dates)
+                    VALUES(%s)
+                    ON CONFLICT (dates)
+                    DO
+                        UPDATE SET dates=%s
                     RETURNING id;
                 """
 
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [
-                    date,
-                    hit,
-                ],
+                [date, date],
             )
             value = db.cur.fetchone()[0]
         return value

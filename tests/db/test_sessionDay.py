@@ -75,48 +75,23 @@ def test_SessionDays_get_unchecked_days(
 
 
 @pytest.mark.parametrize(
-    "date, hit",
+    "date",
     [
-        (
-            datetime.date.today() - datetime.timedelta(days=0),
-            False,
-        ),
-        (
-            datetime.date.today() - datetime.timedelta(days=1),
-            False,
-        ),
-        (
-            datetime.date.today() - datetime.timedelta(days=2),
-            True,
-        ),
-        (
-            datetime.date.today() - datetime.timedelta(days=3),
-            True,
-        ),
-        (
-            datetime.date.today() - datetime.timedelta(days=4),
-            False,
-        ),
+        datetime.date.today() - datetime.timedelta(days=1),
+        datetime.date.today() - datetime.timedelta(days=0),
+        datetime.date.today() - datetime.timedelta(days=2),
+        datetime.date.today() - datetime.timedelta(days=3),
+        datetime.date.today() - datetime.timedelta(days=4),
     ],
 )
 def test_SessionDays_insert_day(
     db_interface,
     date,
-    hit,
 ):
     sessionDay = SessionDay(db_interface)
-    id = sessionDay.insert_day(date=date, hit=hit)
+    id = sessionDay.insert_date(date=date)
 
-    with db_interface.cursor() as db:
-        db.cur.execute(
-            sql.SQL("SELECT dates, hit FROM {table} WHERE id = %s").format(
-                table=sql.Identifier(SessionDay.table_name)
-            ),
-            [
-                id,
-            ],
-        )
-        entries = db.cur.fetchall()
-        assert len(entries) == 1
-        assert date == entries[0][0]
-        assert hit == entries[0][1]
+    get_id, get_date = sessionDay.get_date(id)
+
+    assert get_id == id
+    assert get_date == date

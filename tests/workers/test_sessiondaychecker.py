@@ -168,25 +168,22 @@ def test_crawl(sessiondaychecker_instance, db_interface, status_code, sleep_set)
     sd = sessiondaychecker_instance
     sd.startup()
 
+    sd.rules.apply_rule = Mock(return_value=(1, "www.internet.de"))
+
     sd.session.head = Mock(
         return_value=SimpleNamespace(
             **{"status_code": status_code, "url": "www.internet.de"}
         )
     )
 
-    hit, ret_status_code, document_url, real_url = sd.crawl(
-        sd.session, date(year=2020, month=12, day=10)
-    )
+    sd.request.mark_as_requested = Mock()
 
+    sd.crawl(sd.session, date(year=2020, month=12, day=10))
+
+    assert len(sd.rules.apply_rule.mock_calls) == 1
     assert len(sd.session.head.mock_calls) == 1
-    assert (sd.sleep_end > datetime.now(tz=timezone.utc)) == sleep_set
+    assert len(sd.request.mark_as_requested.mock_calls) == 1
 
-    assert hit != sleep_set
-    assert ret_status_code == status_code
-    assert (
-        document_url
-        == "https://europarl.europa.eu/doceo/document/PV-9-2020-12-10_EN.pdf"
-    )
-    assert real_url == "www.internet.de"
+    assert (sd.sleep_end > datetime.now(tz=timezone.utc)) == sleep_set
 
     sd.shutdown()

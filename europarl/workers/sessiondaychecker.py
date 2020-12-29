@@ -5,9 +5,9 @@ from multiprocessing.queues import Full
 
 import requests
 
-from europarl.db import DBInterface, Request, SessionDay
+from europarl.db import DBInterface, Request, Rules, SessionDay
 from europarl.mptools import QueueProcWorker
-from europarl.rules import PdfProtocol
+from europarl.rules import session_day
 
 
 class SessionDayChecker(QueueProcWorker):
@@ -34,6 +34,7 @@ class SessionDayChecker(QueueProcWorker):
         self.db.connection_name = self.name
         self.sessionDay = SessionDay(self.db)
         self.request = Request(self.db)
+        self.rules = Rules(self.db)
 
         self.session = requests.Session()
 
@@ -109,13 +110,19 @@ class SessionDayChecker(QueueProcWorker):
             Tuple(hit, status_code, generated_url, final_url)
         """
 
-        # construct url to crawl
-        document_url = PdfProtocol.use_rule(date)
+        date_id = self.sessionDay.insert_date(date)
 
-        self.logger.debug("Crawling url: {}".format(document_url))
-        resp = self.session.head(document_url, allow_redirects=True)
+        # construct url to crawl
+        url_id, url = self.rules.apply_rule(
+            rulename=session_day.__name__, date_id=date_id
+        )
+
+        self.logger.debug("Crawling url: {}".format(url))
+
+        resp = self.session.head(url, allow_redirects=True)
+
         self.request.mark_as_requested(
-            status_code=resp.status_code, requested_url=document_url, final_url=resp.url
+            url_id=url_id, status_code=resp.status_code, redirected_url=resp.url
         )
         self.logger.debug("Server response: {}".format(resp.status_code))
 
@@ -127,9 +134,11 @@ class SessionDayChecker(QueueProcWorker):
             self.logger.info("Requesting sleep period because of server errors.")
             self.set_sleep(timedelta(minutes=1))
 
-        hit = resp.status_code == 200
+        if resp.status_code == 200:
+            self.logger.info("Identified session on the: {}".format(date))
 
-        return hit, resp.status_code, document_url, resp.url
+        if resp.status_code == 404:
+            self.logger.info("Identified no session on the: {}".format(date))
 
     def set_sleep(self, delta):
         """
@@ -165,19 +174,4 @@ class SessionDayChecker(QueueProcWorker):
             self.logger.debug("Database returned no unchecked dates, Retrying")
             return
 
-        hit, status_code, generated_url, final_url = self.crawl(self.session, date)
-
-        try:
-            self.logger.debug("Storing result")
-            self.sessionDay.update_day(
-                date,
-                hit=hit,
-                checked=True,
-                status_code=status_code,
-                generated_url=generated_url,
-                final_url=final_url,
-            )
-            self.logger.info("Stored result. Date: {}; Hit: {};".format(date, hit))
-        except Exception as e:
-            self.logger.error("Couldn't store result for date: {}".format(date))
-            self.logger.error(e)
+        self.crawl(self.session, date)
