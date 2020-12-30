@@ -151,3 +151,19 @@ class URLs(Table):
 
         with self.db.cursor() as db:
             db.cur.execute(query)
+
+    def get_url(self, id=None):
+        # TODO: testing
+        query = """  SELECT id, url
+                        FROM   public.urls
+                        WHERE  id = %s ;"""
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [id],
+            )
+            value = db.cur.fetchone()
+
+            ret = {"id": value[0], "url": value[1]}
+        return ret
