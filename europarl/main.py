@@ -13,6 +13,7 @@ from queue import Full
 import requests
 from dotenv import load_dotenv
 
+from europarl import rules
 from europarl.db import DBInterface, Rules, SessionDay, URLs, tables
 from europarl.mptools import (
     EventMessage,
@@ -57,14 +58,14 @@ def main():
             config=config["SessionDayChecker"],
         )
 
-        for instance_id in range(int(config["Downloader"].get("Instances", 1))):
-            main_ctx.Proc(
-                token_bucket_q,
-                url_q,
-                name="Downloader_{}".format(instance_id),
-                worker_class=DocumentDownloader,
-                config=config["Downloader"],
-            )
+        # for instance_id in range(int(config["Downloader"].get("Instances", 1))):
+        #     main_ctx.Proc(
+        #         token_bucket_q,
+        #         url_q,
+        #         name="Downloader_{}".format(instance_id),
+        #         worker_class=DocumentDownloader,
+        #         config=config["Downloader"],
+        #     )
 
         main_ctx.Proc(
             url_q,
@@ -107,7 +108,7 @@ def create_table_structure(config):
 def init_rules(config):
     temp_db = DBInterface(config=config["General"])
     r = Rules(temp_db)
-    r.register_rules()
+    r.register_rules(rules.RULES)
 
 
 class Context(MainContext):

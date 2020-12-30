@@ -94,8 +94,8 @@ def test_get_todo_rule_and_date_combos_one_rule(db_interface, todo_setup):
     rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 1
-    assert ret[0][1] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0][3] == "a"
+    assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[0]["rulename"] == "a"
 
 
 def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
@@ -108,10 +108,10 @@ def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
 
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 2
-    assert ret[0][1] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0][3] == "a"
-    assert ret[1][1] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1][3] == "b"
+    assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[0]["rulename"] == "a"
+    assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[1]["rulename"] == "b"
 
 
 def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
@@ -124,12 +124,12 @@ def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
     rules.update_rule_state(id=todo_setup["rule_ids"][3], active=True)
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 3
-    assert ret[0][1] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0][3] == "a"
-    assert ret[1][1] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1][3] == "b"
-    assert ret[2][1] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[2][3] == "c"
+    assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[0]["rulename"] == "a"
+    assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[1]["rulename"] == "b"
+    assert ret[2]["date"] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[2]["rulename"] == "c"
 
 
 def count_urls(db_interface):

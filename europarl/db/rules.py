@@ -92,6 +92,22 @@ class Rules(Table):
             value = db.cur.fetchone()
         return value
 
+    # TODO: Test
+    def update_rule_state(self, id, active=False):
+        query = """ UPDATE rules
+                    SET active=%s
+                    WHERE id = %s
+                    RETURNING id
+                """
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [active, id],
+            )
+            value = db.cur.fetchone()
+        return value
+
+    # TODO: Test
     def apply_rules(self, date_id):
         query = """ SELECT id, rulename
                     FROM rules
@@ -114,14 +130,16 @@ class Rules(Table):
 
         return url_ids
 
-    def apply_rule(self, rulename, date_id):
-        rule_id, rulename, active = self.get_rule(rulename=rulename)
+    # TODO: Test
+    def apply_rule(self, rule_id, date_id):
+        rule_id, rulename, active = self.get_rule(id=rule_id)
+
         s = SessionDay(self.db)
         date = s.get_date(id=date_id)[1]
 
-        u = URLs(self.db)
-
         url = rules.RULES[rulename](date)
+
+        u = URLs(self.db)
         url_id = u.save_url(date_id=date_id, rule_id=rule_id, url=url)
 
         return url_id, url

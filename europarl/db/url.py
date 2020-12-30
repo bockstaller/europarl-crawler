@@ -41,13 +41,11 @@ class URLs(Table):
                                     ON DELETE CASCADE,
                             CONSTRAINT fk_rule FOREIGN KEY (rule_id)
                                 REFERENCES public.rules (id)
-                                    ON DELETE CASCADE
+                                    ON DELETE CASCADE,
+                            UNIQUE (rule_id, url)
+
                           );"""
     index_definition = """  CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-                            CREATE UNIQUE INDEX "unique_url"
-                            ON {schema}.{table}
-                            USING btree (digest(url, 'sha512'::text));
 
                             CREATE INDEX fk_date_id
                             ON public.urls USING btree
@@ -69,6 +67,9 @@ class URLs(Table):
         """
         query = """ INSERT INTO urls(date_id, rule_id, url, created_at)
                     VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (rule_id, url)
+                    DO
+                        UPDATE SET created_at=%s
                     RETURNING id
                 """
 
@@ -79,6 +80,7 @@ class URLs(Table):
                     date_id,
                     rule_id,
                     url,
+                    created_at,
                     created_at,
                 ],
             )
@@ -126,7 +128,10 @@ class URLs(Table):
                 [rules.session_day.__name__, limit],
             )
             result = db.cur.fetchall()
-        return result
+
+        keys = ["date_id", "date", "rule_id", "rulename"]
+        result_dict = [dict(zip(keys, values)) for values in result]
+        return result_dict
 
     def drop_uncrawled_urls(self):
         """

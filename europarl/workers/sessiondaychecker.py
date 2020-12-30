@@ -30,8 +30,8 @@ class SessionDayChecker(QueueProcWorker):
         self.PREFETCH_LIMIT = int(self.config["PrefetchLimit"])
 
         self.db = DBInterface(config=self.config)
-
         self.db.connection_name = self.name
+
         self.sessionDay = SessionDay(self.db)
         self.request = Request(self.db)
         self.rules = Rules(self.db)
@@ -110,12 +110,14 @@ class SessionDayChecker(QueueProcWorker):
             Tuple(hit, status_code, generated_url, final_url)
         """
 
+        # TODO: catch request failures
+
         date_id = self.sessionDay.insert_date(date)
 
+        rule = self.rules.get_rule(rulename=session_day.__name__)
+
         # construct url to crawl
-        url_id, url = self.rules.apply_rule(
-            rulename=session_day.__name__, date_id=date_id
-        )
+        url_id, url = self.rules.apply_rule(rule_id=rule[0], date_id=date_id)
 
         self.logger.debug("Crawling url: {}".format(url))
 

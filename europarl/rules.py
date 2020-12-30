@@ -80,7 +80,7 @@ def protocol_de_html(date):
     return protocol_url(language="DE", format=".html", date=date)
 
 
-def word_protocol_url(language, formatt, date):
+def word_protocol_url(language, format, date):
     document_url = (
         BASE_URL
         + "CRE-"

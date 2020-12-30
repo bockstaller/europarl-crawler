@@ -168,6 +168,8 @@ def test_crawl(sessiondaychecker_instance, db_interface, status_code, sleep_set)
     sd = sessiondaychecker_instance
     sd.startup()
 
+    sd.rules.get_rule = Mock(return_value=(1, 2))
+
     sd.rules.apply_rule = Mock(return_value=(1, "www.internet.de"))
 
     sd.session.head = Mock(
