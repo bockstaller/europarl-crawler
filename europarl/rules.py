@@ -57,27 +57,57 @@ def protocol_url(language, format, date):
 
 @register_rule
 def session_day(date):
-    return protocol_url(language="EN", format=".pdf", date=date)
+    return protocol_url(
+        language=session_day.language, format=session_day.format, date=date
+    )
+
+
+session_day.format = ".pdf"
+session_day.language = "EN"
 
 
 @register_rule
 def protocol_en_pdf(date):
-    return protocol_url(language="EN", format=".pdf", date=date)
+    return protocol_url(
+        language=protocol_en_pdf.language, format=protocol_en_pdf.format, date=date
+    )
+
+
+protocol_en_pdf.format = ".pdf"
+protocol_en_pdf.language = "EN"
 
 
 @register_rule
 def protocol_en_html(date):
-    return protocol_url(language="EN", format=".html", date=date)
+    return protocol_url(
+        language=protocol_en_html.language, format=protocol_en_html.format, date=date
+    )
+
+
+protocol_en_html.format = ".html"
+protocol_en_html.language = "EN"
 
 
 @register_rule
 def protocol_de_pdf(date):
-    return protocol_url(language="DE", format=".pdf", date=date)
+    return protocol_url(
+        language=protocol_de_pdf.language, format=protocol_de_pdf.format, date=date
+    )
+
+
+protocol_de_pdf.format = ".pdf"
+protocol_de_pdf.language = "DE"
 
 
 @register_rule
 def protocol_de_html(date):
-    return protocol_url(language="DE", format=".html", date=date)
+    return protocol_url(
+        language=protocol_de_html.language, format=protocol_de_html.format, date=date
+    )
+
+
+protocol_de_html.format = ".html"
+protocol_de_html.language = "DE"
 
 
 def word_protocol_url(language, format, date):
@@ -96,19 +126,51 @@ def word_protocol_url(language, format, date):
 
 @register_rule
 def word_protocol_en_pdf(date):
-    return word_protocol_url(language="EN", format=".pdf", date=date)
+    return word_protocol_url(
+        language=word_protocol_en_pdf.language,
+        format=word_protocol_en_pdf.format,
+        date=date,
+    )
+
+
+word_protocol_en_pdf.format = ".pdf"
+word_protocol_en_pdf.language = "EN"
 
 
 @register_rule
 def word_protocol_en_html(date):
-    return word_protocol_url(language="EN", format=".html", date=date)
+    return word_protocol_url(
+        language=word_protocol_en_html.language,
+        format=word_protocol_en_html.format,
+        date=date,
+    )
+
+
+word_protocol_en_html.format = ".html"
+word_protocol_en_html.language = "EN"
 
 
 @register_rule
 def word_protocol_de_pdf(date):
-    return word_protocol_url(language="DE", format=".pdf", date=date)
+    return word_protocol_url(
+        language=word_protocol_de_pdf.language,
+        format=word_protocol_de_pdf.format,
+        date=date,
+    )
+
+
+word_protocol_de_pdf.format = ".pdf"
+word_protocol_de_pdf.language = "DE"
 
 
 @register_rule
 def word_protocol_de_html(date):
-    return word_protocol_url(language="DE", format=".html", date=date)
+    return word_protocol_url(
+        language=word_protocol_de_html.language,
+        format=word_protocol_de_html.format,
+        date=date,
+    )
+
+
+word_protocol_de_html.format = ".html"
+word_protocol_de_html.language = "DE"

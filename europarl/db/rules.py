@@ -20,6 +20,8 @@ class Rules(Table):
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id SERIAL,
                             rulename VARCHAR(100),
+                            filetype VARCHAR(6),
+                            language VARCHAR(6),
                             active BOOLEAN default FALSE,
                             CONSTRAINT rules_pkey PRIMARY KEY (id),
                             CONSTRAINT name_unique UNIQUE (rulename)
@@ -35,20 +37,24 @@ class Rules(Table):
         Returns:
             int: id of the registered rule
         """
-        query = """ INSERT INTO rules(rulename)
-                    VALUES (%s)
+        query = """ INSERT INTO rules(rulename, filetype, language)
+                    VALUES (%s, %s, %s)
                     ON CONFLICT (rulename)
                     DO
-                        UPDATE SET rulename=%s
+                        UPDATE SET rulename=%s, filetype=%s, language=%s
                     RETURNING id
                 """
         ids = []
 
         for rulename in rulenames:
+            func = getattr(rules, rulename)
+            language = getattr(func, "language", None)
+            filetype = getattr(func, "format", None)
+
             with self.db.cursor() as db:
                 db.cur.execute(
                     query,
-                    [rulename, rulename],
+                    [rulename, filetype, language, rulename, filetype, language],
                 )
                 ids.append(db.cur.fetchone()[0])
         return ids
