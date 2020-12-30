@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 from psycopg2 import sql
 
-from europarl.db import URL, Rules, SessionDay, URLs
+from europarl.db import Request, Rules, SessionDay, URLs
 
 
 def test_table_exists(db_interface):
@@ -31,83 +31,156 @@ def sessionDays(db_interface):
     ids = []
     for i in range(5):
         ids.append(
-            sd.update_day(
+            sd.insert_date(
                 date=start + timedelta(days=i),
-                status_code=None,
-                generated_url=None,
-                final_url=None,
-                hit=True,
             )
         )
     return ids
 
 
-names = ["Testrule1", "Testrule2", "Testrule3", "Testrule4", "Testrule5"]
-
-
 @pytest.fixture
-def rules(db_interface):
+def rulesFix(db_interface):
     r = Rules(db_interface)
     ids = []
-    for name in names:
-        ids.append(r.register_rule(name))
+    for i in range(5):
+        ids.append(r.register_rules(str(i))[0])
     return ids
 
 
+def test_save_url(db_interface, sessionDays, rulesFix):
+    u = URLs(db_interface)
+    result = []
+    for day_id, rule_id in zip(sessionDays, rulesFix):
+        result.append(
+            u.save_url(
+                date_id=day_id, rule_id=rule_id, url="www.internet.de" + str(day_id)
+            )
+        )
+    entries = list(zip(sessionDays, rulesFix))
+    assert len(entries) == len(result)
+
+
 @pytest.fixture
-def urls(db_interface, sessionDays, rules):
-    urls = []
-    for date_id, rule_id, url in zip(sessionDays, rules, names):
-        urls.append(URL(date_id, rule_id, url))
-    return urls
-
-
-def test_mark_as_generated(db_interface, urls):
+def todo_setup(db_interface):
     u = URLs(db_interface)
-    result = u.mark_as_generated(urls)
-    assert len(urls) == len(result)
-    for url in urls:
-        assert url.url_id is not None
+    r = Request(db_interface)
+    rules = Rules(db_interface)
+    s = SessionDay(db_interface)
+
+    day_id = s.insert_date(date.today())
+    rule_ids = rules.register_rules(["session_day", "a", "b", "c"])
+    session_url_id = u.save_url(
+        date_id=day_id, rule_id=rule_ids[0], url="www.internet.de"
+    )
+    r.mark_as_requested(
+        url_id=session_url_id, status_code=200, redirected_url="www.internet1.de"
+    )
+
+    return {"day_id": day_id, "rule_ids": rule_ids, "session_url_id": session_url_id}
 
 
-def test_mark_as_crawled(db_interface, urls):
+def test_get_todo_rule_and_date_combos_nothing(db_interface, todo_setup):
+    # valid session url is found but no rule is activated
     u = URLs(db_interface)
-    result = u.mark_as_generated(urls)
-    assert len(urls) == len(result)
-    for url in urls:
-        assert url.url_id is not None
-        result = u.mark_as_crawled(url)
-        assert result is not None
+    ret = u.get_todo_rule_and_date_combos(limit=100)
+    assert len(ret) == 0
 
 
-def test_drop_uncrawled(db_interface, urls):
+def test_get_todo_rule_and_date_combos_one_rule(db_interface, todo_setup):
+    # valid session url is found and one rule is activated
     u = URLs(db_interface)
-    result = u.mark_as_generated(urls)
-    assert len(urls) == len(result)
+    rules = Rules(db_interface)
+    s = SessionDay(db_interface)
+    rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
+    ret = u.get_todo_rule_and_date_combos(limit=100)
+    assert len(ret) == 1
+    assert ret[0][1] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[0][3] == "a"
 
-    url = urls[0]
-    result = u.mark_as_crawled(url)
-    assert result is not None
+
+def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
+    # valid session url is found and two rules are activated
+    u = URLs(db_interface)
+    rules = Rules(db_interface)
+    s = SessionDay(db_interface)
+    rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
+    rules.update_rule_state(id=todo_setup["rule_ids"][2], active=True)
+
+    ret = u.get_todo_rule_and_date_combos(limit=100)
+    assert len(ret) == 2
+    assert ret[0][1] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[0][3] == "a"
+    assert ret[1][1] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[1][3] == "b"
+
+
+def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
+    # valid session url is found and three rules are activated
+    u = URLs(db_interface)
+    rules = Rules(db_interface)
+    s = SessionDay(db_interface)
+    rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
+    rules.update_rule_state(id=todo_setup["rule_ids"][2], active=True)
+    rules.update_rule_state(id=todo_setup["rule_ids"][3], active=True)
+    ret = u.get_todo_rule_and_date_combos(limit=100)
+    assert len(ret) == 3
+    assert ret[0][1] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[0][3] == "a"
+    assert ret[1][1] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[1][3] == "b"
+    assert ret[2][1] == s.get_date(todo_setup["day_id"])[1]
+    assert ret[2][3] == "c"
+
+
+def count_urls(db_interface):
+    with db_interface.cursor() as db:
+        query = """ SELECT COUNT(*)
+                    FROM urls;
+                """
+        db.cur.execute(query)
+        count = db.cur.fetchone()[0]
+    return count
+
+
+@pytest.fixture
+def url_ids(db_interface):
+    u = URLs(db_interface)
+
+    url_ids = []
+    amount = 10
+    for i in range(amount):
+        url_ids.append(u.save_url(None, None, str(i)))
+
+    assert count_urls(db_interface) == amount
+    return url_ids
+
+
+def test_drop_uncrawled_urls_drop_all(db_interface, url_ids):
+    u = URLs(db_interface)
 
     u.drop_uncrawled_urls()
 
-    update_results = []
-    for url in urls:
-        update_results.append(u.mark_as_crawled(url))
-    print(update_results)
-    assert len(update_results) == 5
-    assert len([x for x in update_results if x is not None]) == 1
+    assert count_urls(db_interface) == 0
 
 
-def test_dates_with_less_derived_urls_than_fewer(db_interface, urls):
+def test_drop_uncrawled_urls_drop_all_but_one(db_interface, url_ids):
     u = URLs(db_interface)
-    u.mark_as_generated(urls)
-    result = u.dates_with_less_derived_urls_than(2, 10)
-    assert len(result) == 5
+    r = Request(db_interface)
+
+    r.mark_as_requested(url_ids[0], 200, "wwww.internet.de")
+
+    u.drop_uncrawled_urls()
+
+    assert count_urls(db_interface) == 1
 
 
-def test_dates_with_less_derived_urls_than_matching(db_interface, urls):
+def test_drop_uncrawled_urls_drop_all_but_two(db_interface, url_ids):
     u = URLs(db_interface)
-    u.mark_as_generated(urls)
-    result = u.dates_with_less_derived_urls_than(1, 10)
-    assert len(result) == 0
+    r = Request(db_interface)
+
+    r.mark_as_requested(url_ids[0], 200, "wwww.internet.de")
+    r.mark_as_requested(url_ids[1], 200, "wwww.internet.de")
+
+    u.drop_uncrawled_urls()
+
+    assert count_urls(db_interface) == 2
