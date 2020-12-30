@@ -13,11 +13,10 @@ class Request(Table):
     table_definition = """CREATE TABLE IF NOT EXISTS {schema}.{table}(
                             id SERIAL,
                             url_id integer,
+                            document_id integer,
                             requested_at timestamp with time zone,
                             status_code integer,
-                            content_uuid uuid,
-                            requested_url varchar(2000),
-                            final_url varchar(2000),
+                            redirected_url varchar(2000),
                             CONSTRAINT requests_pkey PRIMARY KEY (id),
                             CONSTRAINT fk_url FOREIGN KEY (url_id)
                                 REFERENCES public.urls (id)
@@ -28,7 +27,7 @@ class Request(Table):
                             (requested_at DESC NULLS LAST)"""
 
     def get_request_log(self, id):
-        query = """ SELECT status_code, requested_url, final_url, requested_at, content_uuid, url_id
+        query = """ SELECT id, url_id, document_id, requested_at, status_code, redirected_url
                     FROM public.requests
                     WHERE id = %s
         """
@@ -42,29 +41,21 @@ class Request(Table):
 
     def mark_as_requested(
         self,
+        url_id,
         status_code,
-        requested_url,
-        final_url,
+        redirected_url,
+        document_id=None,
         requested_at=datetime.now(tz=timezone.utc),
-        content_uuid=None,
-        url_id=None,
     ):
-        query = """ INSERT INTO public.requests(status_code, requested_url, final_url, requested_at, content_uuid, url_id)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+        query = """ INSERT INTO requests(url_id, document_id, requested_at, status_code, redirected_url)
+                    VALUES (%s, %s, %s, %s, %s)
                     RETURNING id
                 """
 
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [
-                    status_code,
-                    requested_url,
-                    final_url,
-                    requested_at,
-                    content_uuid,
-                    url_id,
-                ],
+                [url_id, document_id, requested_at, status_code, redirected_url],
             )
             value = db.cur.fetchone()[0]
         return value

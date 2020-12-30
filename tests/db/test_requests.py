@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from psycopg2 import sql
 
-from europarl.db import URL, Request, URLs
+from europarl.db import Request, URLs
 
 
 def test_table_exists(db_interface):
@@ -29,54 +29,49 @@ def test_table_not_exists(db_interface):
     [200, 404, 500],
 )
 @pytest.mark.parametrize(
-    "requested_url",
+    "url",
     ["www.internet.de"],
 )
 @pytest.mark.parametrize(
-    "final_url",
+    "redirected_url",
     ["www.internet1.de"],
 )
 @pytest.mark.parametrize(
     "requested_at",
     [
+        None,
         datetime.now(tz=timezone.utc),
         datetime.now(tz=timezone.utc) + timedelta(hours=1),
         datetime.now(tz=timezone.utc) + timedelta(hours=2),
     ],
 )
 @pytest.mark.parametrize(
-    "content_uuid",
-    ["c12bdabf-672d-4ca7-ac06-4b788f2a7a96"],
-)
-@pytest.mark.parametrize(
-    "url",
-    [False, True],
+    "document_id",
+    [None],
 )
 def test_Request_mark_as_requested_get_request_log(
     db_interface,
-    status_code,
-    requested_url,
-    final_url,
-    requested_at,
-    content_uuid,
     url,
+    status_code,
+    redirected_url,
+    document_id,
+    requested_at,
 ):
     request = Request(db_interface)
-    url = URLs(db_interface)
+    urls = URLs(db_interface)
 
     url_id = None
     if url:
-        url_inst = URL(None, None, requested_url)
-        url_inst = url.mark_as_generated([url_inst])[0]
-        url_id = url_inst.url_id
+        url_id = urls.save_url(None, None, url)
+
+    # TODO: Test document_id
 
     id = request.mark_as_requested(
-        status_code=status_code,
-        requested_url=requested_url,
-        final_url=final_url,
-        requested_at=requested_at,
-        content_uuid=content_uuid,
         url_id=url_id,
+        status_code=status_code,
+        redirected_url=redirected_url,
+        requested_at=requested_at,
+        document_id=document_id,
     )
 
     assert type(id) == int
@@ -87,25 +82,29 @@ def test_Request_mark_as_requested_get_request_log(
         assert url_id is None
 
     row = request.get_request_log(id)
-    assert row[0] == status_code
-    assert row[1] == requested_url
-    assert row[2] == final_url
+    assert row[0] == id
+    assert row[1] == url_id
+    assert row[2] == document_id
     assert row[3] == requested_at
-    assert row[4] == content_uuid
-    assert row[5] == url_id
+    assert row[4] == status_code
+    assert row[5] == redirected_url
 
 
 def test_get_status_code_summary(db_interface):
     request = Request(db_interface)
     timestamp = []
     now = datetime.now(tz=timezone.utc)
+
+    urls = URLs(db_interface)
+    url_id = urls.save_url(None, None, "www.internet.de")
+
     for i in range(-10, 10):
         ts = now + timedelta(seconds=i)
         timestamp.append(ts)
         request.mark_as_requested(
+            url_id=url_id,
             status_code=200,
-            requested_url="www.internet.de",
-            final_url="www.internet.de",
+            redirected_url="www.internet1.de",
             requested_at=ts,
         )
 
