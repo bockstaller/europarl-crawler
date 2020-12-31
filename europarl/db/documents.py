@@ -20,8 +20,10 @@ class Documents(Table):
         self,
         filepath,
         filename,
-        downloaded_at=datetime.now(tz=timezone.utc),
+        downloaded_at=None,
     ):
+        if downloaded_at is None:
+            downloaded_at = datetime.now(tz=timezone.utc)
         query = """ INSERT INTO documents(filepath, filename, downloaded_at)
                     VALUES ( %s, %s, %s)
                     RETURNING id

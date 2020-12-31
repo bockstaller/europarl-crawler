@@ -52,7 +52,7 @@ class URLs(Table):
                             (date_id ASC NULLS LAST)
                             """
 
-    def save_url(self, date_id, rule_id, url, created_at=datetime.now(tz=timezone.utc)):
+    def save_url(self, date_id, rule_id, url, created_at=None):
         """
         Stores a url as generated
 
@@ -65,6 +65,9 @@ class URLs(Table):
         Returns:
             int: id of url
         """
+        if created_at is None:
+            created_at = datetime.now(tz=timezone.utc)
+
         query = """ INSERT INTO urls(date_id, rule_id, url, created_at)
                     VALUES (%s, %s, %s, %s)
                     ON CONFLICT (rule_id, url)

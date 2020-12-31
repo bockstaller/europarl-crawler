@@ -48,8 +48,10 @@ class Request(Table):
         status_code,
         redirected_url,
         document_id=None,
-        requested_at=datetime.now(tz=timezone.utc),
+        requested_at=None,
     ):
+        if requested_at is None:
+            requested_at = datetime.now(tz=timezone.utc)
         query = """ INSERT INTO requests(url_id, document_id, requested_at, status_code, redirected_url)
                     VALUES (%s, %s, %s, %s, %s)
                     RETURNING id
@@ -66,13 +68,14 @@ class Request(Table):
     def get_status_code_summary(self, start_time, end_time):
         query = """ SELECT status_code
                     FROM   public.requests
-                    WHERE  requested_at BETWEEN SYMMETRIC %s AND %s ;"""
+                    WHERE  requested_at >= %s AND requested_at <= %s;"""
 
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
                 [start_time, end_time],
             )
+
             rows = db.cur.fetchall()
 
         counter = Counter()
