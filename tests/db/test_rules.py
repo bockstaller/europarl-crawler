@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from psycopg2 import sql
 
+from europarl import rules
 from europarl.db import Rules
 
 
@@ -24,10 +25,7 @@ def test_table_not_exists(db_interface):
     assert rules.table_exists() is False
 
 
-@pytest.mark.parametrize(
-    "rulenames",
-    [["a"], ["1"], [1], [1, 2, 3, 4, 5], ["a", "b", "c", "d"]],
-)
+@pytest.mark.parametrize("rulenames", [rules.RULES])
 def test_register_rule_and_get_by_name_id(db_interface, rulenames):
     rules = Rules(db_interface)
     registered_rules = []
@@ -38,6 +36,7 @@ def test_register_rule_and_get_by_name_id(db_interface, rulenames):
         id_by_name, name_by_name, active_by_name = rules.get_rule(rulename=original)
         assert id_by_name == stored_id
         assert type(name_by_name) == str
+
         assert name_by_name == str(original)
         assert not active_by_name
 
@@ -61,7 +60,7 @@ def test_get_non_existent_rule(db_interface):
 
 
 def test_register_rule_multiple_times(db_interface):
-    rules = Rules(db_interface)
-    id_0 = rules.register_rules("Abc")
-    id_1 = rules.register_rules("Abc")
+    r = Rules(db_interface)
+    id_0 = r.register_rules(rules.RULES)
+    id_1 = r.register_rules(rules.RULES)
     assert id_0 == id_1

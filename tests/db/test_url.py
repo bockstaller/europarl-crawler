@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 from psycopg2 import sql
 
+from europarl import rules
 from europarl.db import Request, Rules, SessionDay, URLs
 
 
@@ -42,8 +43,8 @@ def sessionDays(db_interface):
 def rulesFix(db_interface):
     r = Rules(db_interface)
     ids = []
-    for i in range(5):
-        ids.append(r.register_rules(str(i))[0])
+
+    ids = r.register_rules(rules.RULES)
     return ids
 
 
@@ -78,11 +79,11 @@ def test_save_url_rule_unique(db_interface, sessionDays, rulesFix):
 def todo_setup(db_interface):
     u = URLs(db_interface)
     r = Request(db_interface)
-    rules = Rules(db_interface)
+    ru = Rules(db_interface)
     s = SessionDay(db_interface)
 
     day_id = s.insert_date(date.today())
-    rule_ids = rules.register_rules(["session_day", "a", "b", "c"])
+    rule_ids = ru.register_rules(rules.RULES)
     session_url_id = u.save_url(
         date_id=day_id, rule_id=rule_ids[0], url="www.internet.de"
     )
@@ -103,47 +104,47 @@ def test_get_todo_rule_and_date_combos_nothing(db_interface, todo_setup):
 def test_get_todo_rule_and_date_combos_one_rule(db_interface, todo_setup):
     # valid session url is found and one rule is activated
     u = URLs(db_interface)
-    rules = Rules(db_interface)
+    ru = Rules(db_interface)
     s = SessionDay(db_interface)
-    rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
+    ru.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 1
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == "a"
+    assert ret[0]["rulename"] == list(rules.RULES.keys())[1]
 
 
 def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
     # valid session url is found and two rules are activated
     u = URLs(db_interface)
-    rules = Rules(db_interface)
+    ru = Rules(db_interface)
     s = SessionDay(db_interface)
-    rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
-    rules.update_rule_state(id=todo_setup["rule_ids"][2], active=True)
+    ru.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
+    ru.update_rule_state(id=todo_setup["rule_ids"][2], active=True)
 
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 2
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == "a"
+    assert ret[0]["rulename"] == list(rules.RULES.keys())[1]
     assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1]["rulename"] == "b"
+    assert ret[1]["rulename"] == list(rules.RULES.keys())[2]
 
 
 def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
     # valid session url is found and three rules are activated
     u = URLs(db_interface)
-    rules = Rules(db_interface)
+    ru = Rules(db_interface)
     s = SessionDay(db_interface)
-    rules.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
-    rules.update_rule_state(id=todo_setup["rule_ids"][2], active=True)
-    rules.update_rule_state(id=todo_setup["rule_ids"][3], active=True)
+    ru.update_rule_state(id=todo_setup["rule_ids"][1], active=True)
+    ru.update_rule_state(id=todo_setup["rule_ids"][2], active=True)
+    ru.update_rule_state(id=todo_setup["rule_ids"][3], active=True)
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 3
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == "a"
+    assert ret[0]["rulename"] == list(rules.RULES.keys())[1]
     assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1]["rulename"] == "b"
+    assert ret[1]["rulename"] == list(rules.RULES.keys())[2]
     assert ret[2]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[2]["rulename"] == "c"
+    assert ret[2]["rulename"] == list(rules.RULES.keys())[3]
 
 
 def count_urls(db_interface):

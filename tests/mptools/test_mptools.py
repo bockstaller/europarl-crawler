@@ -448,11 +448,13 @@ def _test_stop_procs(cap_log, proc_name, worker_class, config):
     cap_log.set_level(logging.DEBUG)
 
     with MainContext(config) as mctx:
-        mctx.STOP_WAIT_SECS = 0.1
+        mctx.STOP_WAIT_SECS = 0.2
         mctx.Proc(name=proc_name, worker_class=worker_class, config=config["General"])
         time.sleep(0.05)
 
+    print(mctx.STOP_WAIT_SECS)
     for proc in mctx.procs:
+        print(proc)
         proc.terminate()
     return mctx._stopped_procs_result, len(mctx.procs)
 
@@ -505,7 +507,8 @@ class HangingProcWorker(ProcWorker):
         while num_terminates < MAX_TERMINATES:
             try:
                 while True:
-                    time.sleep(0.1)
+                    print(num_terminates)
+                    time.sleep(0.02)
             except TerminateInterrupt:
                 num_terminates += 1
 
