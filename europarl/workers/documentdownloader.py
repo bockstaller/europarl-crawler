@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import traceback
 import uuid
@@ -7,19 +8,16 @@ from multiprocessing.queues import Full
 
 import requests
 
-from europarl.db import DBInterface, Request
-from europarl.db.url import URL, URLs
+from europarl.db import DBInterface, Documents, Request, URLs
 from europarl.mptools import QueueProcWorker
-from europarl.rules import PdfProtocol
 
 
 class DocumentDownloader(QueueProcWorker):
 
-    PATH = "../data/"
+    DATAPATH = "../data/"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.url_obj = None
 
     def init_args(self, args):
         (
@@ -31,79 +29,94 @@ class DocumentDownloader(QueueProcWorker):
         """"""
         super().startup()
 
-        self.PATH = self.config["Path"]
+        self.DATAPATH = self.config["Path"]
+        self.REQUEST_TIMEOUT = float(self.config["RequestTimeoutFactor"]) * float(
+            self.config["StopWaitSecs"]
+        )
 
         self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
 
         self.request = Request(self.db)
         self.url = URLs(self.db)
+        self.docs = Documents(self.db)
+
+        self.session = requests.Session()
 
         self.logger.info("{} started".format(self.name))
+
+        self.url_id, self.url_str = None, None
 
     def shutdown(self):
         """"""
         super().shutdown()
 
-        del self.request
+        del self.session
 
     def main_func(self, token):
         # get url
-        if not self.url_obj:
-            self.url_obj = self.url_q.safe_get()
-        else:
-            try:
-                self.logger.debug("Downloading: {}".format(self.url_obj.url))
-                # make request
-                with requests.Session() as s:
-                    try:
-                        resp = s.get(
-                            self.url_obj.url,
-                            allow_redirects=True,
-                            timeout=self.DEFAULT_POLLING_TIMEOUT * 15,
-                        )
-                        self.logger.debug(
-                            "Response for: {} is {}".format(
-                                self.url_obj.url, resp.status_code
-                            )
-                        )
-                    except requests.ReadTimeout:
+        if not self.url_id:
+            self.logger.debug("Getting new URL")
+            self.url_id = self.url_q.safe_get()
 
-                        self.logger.warn(
-                            "Download timeout - Retrying URL: {}".format(
-                                self.url_obj.url
-                            )
-                        )
-                        time.sleep(self.DEFAULT_POLLING_TIMEOUT)
-                        self.request.mark_as_requested(
-                            status_code=408,
-                            requested_url=self.url_obj.url,
-                            final_url=None,
-                        )
-                        return
+            if self.url_id is None:
+                self.work_q.safe_put(token)
+                time.sleep(self.DEFAULT_POLLING_TIMEOUT)
+                return
 
-                # if successfull store file
-                if resp.status_code == 200:
-                    self.logger.debug("Storing file for {}".format(self.url_obj.url))
-                    generated_uuid = uuid.uuid4()
-                    open(
-                        self.PATH + str(generated_uuid) + self.url_obj.file_ending, "wb"
-                    ).write(resp.content)
+            url = self.url.get_url(id=self.url_id)
+            self.url_str = url["url"]
+            self.filetype = url["filetype"]
 
-                self.logger.debug(
-                    "Storing crawling result for: {}".format(self.url_obj.url)
-                )
-                # store crawling result in crawling table
-                self.request.mark_as_requested(
-                    status_code=resp.status_code,
-                    requested_url=self.url_obj.url,
-                    final_url=resp.url,
-                    content_uuid=str(generated_uuid),
-                    url_id=self.url_obj.url_id,
-                )
-                self.url.mark_as_crawled(self.url_obj)
-                self.logger.info("Downloaded: {}".format(self.url_obj.url))
+        try:
 
-                self.url_obj = None
-            except TimeoutError:
-                pass
+            self.logger.debug("Downloading: {}".format(self.url_str))
+            resp = self.session.get(
+                self.url_str,
+                allow_redirects=True,
+                timeout=self.REQUEST_TIMEOUT,
+            )
+            self.logger.debug(
+                "Response for: {} is {}".format(self.url_str, resp.status_code)
+            )
+
+            self.request.mark_as_requested(
+                url_id=self.url_id,
+                status_code=resp.status_code,
+                redirected_url=resp.url,
+            )
+
+        except requests.RequestException as e:
+            print(e)
+            self.logger.warn("Request exception for url: {}".format(self.url_str))
+            self.request.mark_as_requested(
+                url_id=self.url_id, status_code=408, redirected_url=self.url_str
+            )
+            time.sleep(self.DEFAULT_POLLING_TIMEOUT)
+            return
+
+        doc_id = None
+        # if successfull store file
+        if resp.status_code == 200:
+            self.logger.debug("Storing file for {}".format(self.url_str))
+            file_uuid = str(uuid.uuid4())
+            filename = file_uuid + self.filetype
+            abspath = os.path.abspath(self.DATAPATH)
+            filepath = abspath + "/" + filename
+
+            open(filepath, "wb").write(resp.content)
+
+            doc_id = self.docs.register_document(filepath=filepath, filename=file_uuid)
+
+        self.logger.info("Storing crawling result for: {}".format(self.url_str))
+
+        self.request.mark_as_requested(
+            self.url_id,
+            status_code=resp.status_code,
+            redirected_url=resp.url,
+            document_id=doc_id,
+        )
+
+        self.logger.info("Crawled: {}".format(self.url_str))
+
+        self.url_id, self.url_str, self.filetype = None, None, None

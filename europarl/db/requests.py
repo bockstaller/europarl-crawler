@@ -20,6 +20,9 @@ class Request(Table):
                             CONSTRAINT requests_pkey PRIMARY KEY (id),
                             CONSTRAINT fk_url FOREIGN KEY (url_id)
                                 REFERENCES public.urls (id)
+                                    ON DELETE NO ACTION,
+                            CONSTRAINT fk_document FOREIGN KEY (document_id)
+                                REFERENCES public.documents (id)
                                     ON DELETE NO ACTION
                           );"""
     index_definition = """  CREATE INDEX requested_at_index

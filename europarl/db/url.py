@@ -154,9 +154,11 @@ class URLs(Table):
 
     def get_url(self, id=None):
         # TODO: testing
-        query = """  SELECT id, url
-                        FROM   public.urls
-                        WHERE  id = %s ;"""
+        query = """ SELECT  urls.id, urls.url, rules.filetype
+                    FROM    public.urls
+                    JOIN    rules
+                    ON rules.id = urls.rule_id
+                    WHERE  urls.id = %s ;"""
 
         with self.db.cursor() as db:
             db.cur.execute(
@@ -165,5 +167,5 @@ class URLs(Table):
             )
             value = db.cur.fetchone()
 
-            ret = {"id": value[0], "url": value[1]}
+            ret = {"id": value[0], "url": value[1], "filetype": value[2]}
         return ret

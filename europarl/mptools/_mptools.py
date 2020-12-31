@@ -357,6 +357,7 @@ class MainContext:
         self.logger = setup_logging(
             logger_q=self.logger_q, name="MAIN", config=self.config["General"]
         )
+        self.STOP_WAIT_SECS = float(self.config["General"]["StopWaitSecs"])
 
         handler = logging.StreamHandler()
         handler.setLevel(logging.DEBUG)

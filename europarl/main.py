@@ -31,10 +31,6 @@ from europarl.workers import (
     TokenBucketWorker,
 )
 
-DEFAULT_POLLING_TIMEOUT = 0.1
-TOKENS_PER_SECOND = 2
-MAX_SLEEP_SECS = 0.02
-
 
 def main():
     config = read_config()
@@ -58,14 +54,14 @@ def main():
             config=config["SessionDayChecker"],
         )
 
-        # for instance_id in range(int(config["Downloader"].get("Instances", 1))):
-        #     main_ctx.Proc(
-        #         token_bucket_q,
-        #         url_q,
-        #         name="Downloader_{}".format(instance_id),
-        #         worker_class=DocumentDownloader,
-        #         config=config["Downloader"],
-        #     )
+        for instance_id in range(int(config["Downloader"].get("Instances", 1))):
+            main_ctx.Proc(
+                token_bucket_q,
+                url_q,
+                name="Downloader_{}".format(instance_id),
+                worker_class=DocumentDownloader,
+                config=config["Downloader"],
+            )
 
         main_ctx.Proc(
             url_q,
