@@ -26,6 +26,7 @@ pytest = "*"
 requests-futures = "*"
 beautifulsoup4 = "*"
 pytest-cov = "*"
+fake-useragent = "*"
 
 [scripts]
 test = "python -m pytest ."

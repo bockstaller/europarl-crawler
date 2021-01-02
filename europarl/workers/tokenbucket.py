@@ -11,8 +11,8 @@ class TokenBucketWorker(TimerProcWorker):
 
     """
 
-    MIN_INTERVAL_SECS = 3
-    INTERVAL_SECS = 3
+    MIN_INTERVAL_SECS = 0.1
+    INTERVAL_SECS = 0.1
 
     def __init__(self, *args, **kwargs):
         super(TokenBucketWorker, self).__init__(*args, **kwargs)
@@ -29,8 +29,8 @@ class TokenBucketWorker(TimerProcWorker):
         """
         super().startup()
 
-        self.MIN_INTERVAL_SECS = int(self.config["MinIntervalSecs"])
-        self.THROTTLING_FACTOR = int(self.config["ThrottlingFactor"])
+        self.MIN_INTERVAL_SECS = float(self.config["MinIntervalSecs"])
+        self.THROTTLING_FACTOR = float(self.config["ThrottlingFactor"])
         self.INTERVAL_SECS = self.MIN_INTERVAL_SECS
 
         self.db = DBInterface(config=self.config)
@@ -84,7 +84,7 @@ class TokenBucketWorker(TimerProcWorker):
         Args:
             status_codes (list(int)): List of status_codes as integers
         """
-        if any(int(item) in [408, 429] for item in status_codes):
+        if any(int(item) in [429, 460] for item in status_codes):
             self.logger.warning(
                 "Requesting throttling because of server rate limiting."
             )
@@ -94,8 +94,10 @@ class TokenBucketWorker(TimerProcWorker):
             self.logger.warning("Requesting throttling because of server errors.")
             self.throttle()
             return
-        self.logger.info("Requesting unthrottling")
-        self.unthrottle()
+        if any(int(item) in [200, 404] for item in status_codes):
+            self.logger.info("Requesting unthrottling")
+            self.unthrottle()
+            return
 
     def check_throttling(self, now):
         """
@@ -112,7 +114,6 @@ class TokenBucketWorker(TimerProcWorker):
             status_codes = self.request.get_status_code_summary(
                 self.last_check, now
             ).keys()
-
             self.logger.debug("Setting checking timerange for next iteration")
             self.last_check = now
             self.next_check = now + timedelta(seconds=self.INTERVAL_SECS * 5)
@@ -130,9 +131,9 @@ class TokenBucketWorker(TimerProcWorker):
         self.logger.debug("Enqueing token: {}".format(token))
 
         try:
+            self.check_throttling(datetime.now(tz=timezone.utc))
             self.token_bucket_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
             self.logger.debug("Enqueued token: {}".format(token))
-            self.check_throttling(datetime.now(tz=timezone.utc))
         except Full:
             self.logger.debug("Queue full. - Discarding token: {}".format(token))
             return
