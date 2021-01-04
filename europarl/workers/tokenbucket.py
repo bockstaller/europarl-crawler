@@ -116,7 +116,9 @@ class TokenBucketWorker(TimerProcWorker):
             ).keys()
             self.logger.debug("Setting checking timerange for next iteration")
             self.last_check = now
-            self.next_check = now + timedelta(seconds=self.INTERVAL_SECS * 5)
+            self.next_check = now + timedelta(
+                seconds=self.INTERVAL_SECS * self.THROTTLING_FACTOR
+            )
             self.apply_throttling(status_codes)
 
     def main_func(self):
