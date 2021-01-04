@@ -51,7 +51,7 @@ class SessionDay(Table):
             [datetime.date]: List of dates with a maximum number of limit entries
         """
 
-        query = """ SELECT days
+        query = """ (SELECT days
                     FROM(
                         /*all dates between two dates*/
                         SELECT days::date
@@ -75,13 +75,48 @@ class SessionDay(Table):
                     /*LEFT JOIN results in NULL where no data is available in stored*/
                     WHERE stored.dates is NULL
                     ORDER by s.days desc
-                    LIMIT %s;
+                    LIMIT %s)
+                    /*combine results with already created dates which weren't crawled successfull*/
+
+                    UNION ALL
+
+                    (/*return dates which have no successfull sessio_day requests associated */
+                    SELECT session_days.dates
+                    FROM urls
+                    LEFT JOIN session_days on session_days.id=urls.date_id
+                    LEFT JOIN requests on requests.url_id=urls.id
+                    LEFT JOIN rules on urls.rule_id = rules.id
+                    WHERE rules.id = (SELECT id FROM rules WHERE rulename =%s) and session_days.dates not in (
+                        /*get all dates with successfull sesion_day requests*/
+                        SELECT session_days.dates
+                        FROM urls
+                        LEFT JOIN session_days on session_days.id=urls.date_id
+                        LEFT JOIN requests on requests.url_id=urls.id
+                        LEFT JOIN rules on urls.rule_id = rules.id
+                        WHERE rules.id = (SELECT id FROM rules WHERE rulename =%s) and status_code in (200,404))
+                    LIMIT %s)
+                    LIMIT %s
+
+
                     """
 
         date = datetime.date.today() - offset
 
         with self.db.cursor() as db:
-            db.cur.execute(query, [start_date, date, sessiondayrulename, limit])
+            db.cur.execute(
+                query,
+                [
+                    start_date,
+                    date,
+                    sessiondayrulename,
+                    # the limit here is set to 9 to leave one space free to recrawl unsuccessfully crawled dates
+                    limit - 1,
+                    sessiondayrulename,
+                    sessiondayrulename,
+                    limit,
+                    limit,
+                ],
+            )
             data = [row[0] for row in db.cur.fetchall()]
             return data
 

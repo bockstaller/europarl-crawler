@@ -38,10 +38,10 @@ class URLs(Table):
                             CONSTRAINT urls_pkey PRIMARY KEY (id),
                             CONSTRAINT fk_date FOREIGN KEY (date_id)
                                 REFERENCES public.session_days (id)
-                                    ON DELETE CASCADE,
+                                    ON DELETE SET NULL,
                             CONSTRAINT fk_rule FOREIGN KEY (rule_id)
                                 REFERENCES public.rules (id)
-                                    ON DELETE CASCADE,
+                                    ON DELETE SET NULL,
                             UNIQUE (rule_id, url)
 
                           );"""

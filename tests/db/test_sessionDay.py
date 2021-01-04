@@ -36,7 +36,8 @@ def test_table_not_exists(db_interface):
             datetime.date.today() - datetime.timedelta(days=9),
             datetime.timedelta(days=0),
             5,
-            5,
+            # we expect one less to leave space for the retry url
+            4,
         ),
         (
             datetime.date.today() - datetime.timedelta(days=9),
