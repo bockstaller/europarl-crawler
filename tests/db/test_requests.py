@@ -39,7 +39,6 @@ def test_table_not_exists(db_interface):
 @pytest.mark.parametrize(
     "requested_at",
     [
-        None,
         datetime.now(tz=timezone.utc),
         datetime.now(tz=timezone.utc) + timedelta(hours=1),
         datetime.now(tz=timezone.utc) + timedelta(hours=2),

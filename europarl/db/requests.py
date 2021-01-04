@@ -20,10 +20,10 @@ class Request(Table):
                             CONSTRAINT requests_pkey PRIMARY KEY (id),
                             CONSTRAINT fk_url FOREIGN KEY (url_id)
                                 REFERENCES public.urls (id)
-                                    ON DELETE NO ACTION,
+                                    ON DELETE SET NULL,
                             CONSTRAINT fk_document FOREIGN KEY (document_id)
                                 REFERENCES public.documents (id)
-                                    ON DELETE NO ACTION
+                                    ON DELETE SET NULL
                           );"""
     index_definition = """  CREATE INDEX requested_at_index
                             ON public.requests USING btree
@@ -52,6 +52,7 @@ class Request(Table):
     ):
         if requested_at is None:
             requested_at = datetime.now(tz=timezone.utc)
+
         query = """ INSERT INTO requests(url_id, document_id, requested_at, status_code, redirected_url)
                     VALUES (%s, %s, %s, %s, %s)
                     RETURNING id
