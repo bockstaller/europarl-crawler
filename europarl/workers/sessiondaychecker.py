@@ -38,6 +38,8 @@ class SessionDayChecker(QueueProcWorker):
 
         self.session = requests.Session()
 
+        self.url, self.url_id = None, None
+
         self.sleep_end = datetime.now(timezone.utc) - timedelta(hours=1)
 
         self.logger.info("{} started".format(self.name))
@@ -110,37 +112,53 @@ class SessionDayChecker(QueueProcWorker):
             Tuple(hit, status_code, generated_url, final_url)
         """
 
-        # TODO: catch request failures
+        if self.url is None:
+            date_id = self.sessionDay.insert_date(date)
+            rule = self.rules.get_rule(rulename=session_day.__name__)
+            # construct url to crawl
+            self.url_id, self.url = self.rules.apply_rule(
+                rule_id=rule[0], date_id=date_id
+            )
 
-        date_id = self.sessionDay.insert_date(date)
+        self.logger.debug("Crawling url: {}".format(self.url))
 
-        rule = self.rules.get_rule(rulename=session_day.__name__)
+        try:
+            resp = self.session.head(self.url, allow_redirects=True)
 
-        # construct url to crawl
-        url_id, url = self.rules.apply_rule(rule_id=rule[0], date_id=date_id)
+            self.request.mark_as_requested(
+                url_id=self.url_id,
+                status_code=resp.status_code,
+                redirected_url=resp.url,
+            )
+            self.logger.debug("Server response: {}".format(resp.status_code))
 
-        self.logger.debug("Crawling url: {}".format(url))
+            if resp.status_code == 200:
+                self.logger.info("Identified session on the: {}".format(date))
 
-        resp = self.session.head(url, allow_redirects=True)
+            if resp.status_code == 404:
+                self.logger.info("Identified no session on the: {}".format(date))
 
-        self.request.mark_as_requested(
-            url_id=url_id, status_code=resp.status_code, redirected_url=resp.url
-        )
-        self.logger.debug("Server response: {}".format(resp.status_code))
+            self.url, self.url_id = None, None
 
-        if resp.status_code in [408, 429]:
-            self.logger.info("Requesting sleep period because of server rate limiting.")
-            self.set_sleep(timedelta(minutes=15))
+        except requests.ReadTimeout as e:
 
-        if resp.status_code >= 500:
-            self.logger.info("Requesting sleep period because of server errors.")
-            self.set_sleep(timedelta(minutes=1))
+            self.logger.warn("Timeout for url: {}".format(self.url))
+            self.logger.warn("Exception Message: {}".format(e))
 
-        if resp.status_code == 200:
-            self.logger.info("Identified session on the: {}".format(date))
+            self.request.mark_as_requested(
+                url_id=self.url_id, status_code=408, redirected_url=self.url
+            )
+            time.sleep(self.DEFAULT_POLLING_TIMEOUT)
+            return
 
-        if resp.status_code == 404:
-            self.logger.info("Identified no session on the: {}".format(date))
+        except requests.RequestException as e:
+            self.logger.warn("Request exception for url: {}".format(self.url))
+            self.logger.warn("Exception Message: {}".format(e))
+            self.request.mark_as_requested(
+                url_id=self.url_id, status_code=460, redirected_url=self.url
+            )
+            time.sleep(self.DEFAULT_POLLING_TIMEOUT)
+            return
 
     def set_sleep(self, delta):
         """

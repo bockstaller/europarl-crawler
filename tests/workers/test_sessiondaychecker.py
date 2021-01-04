@@ -147,20 +147,16 @@ def test_set_sleep(sessiondaychecker_instance):
             False,
         ),
         (
-            408,
-            True,
-        ),
-        (
             429,
-            True,
+            False,
         ),
         (
             500,
-            True,
+            False,
         ),
         (
             501,
-            True,
+            False,
         ),
     ],
 )
