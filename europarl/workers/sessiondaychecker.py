@@ -7,7 +7,7 @@ import requests
 
 from europarl.db import DBInterface, Request, Rules, SessionDay
 from europarl.mptools import QueueProcWorker
-from europarl.rules import session_day
+from europarl.rules import SessionDayRule
 
 
 class SessionDayChecker(QueueProcWorker):
@@ -114,7 +114,7 @@ class SessionDayChecker(QueueProcWorker):
 
         if self.url is None:
             date_id = self.sessionDay.insert_date(date)
-            rule = self.rules.get_rule(rulename=session_day.__name__)
+            rule = self.rules.get_rule(rulename=SessionDayRule.name)
             # construct url to crawl
             self.url_id, self.url = self.rules.apply_rule(
                 rule_id=rule[0], date_id=date_id

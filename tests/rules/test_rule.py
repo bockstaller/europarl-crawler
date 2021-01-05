@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from europarl.rules import get_term, protocol_en_html, protocol_en_pdf
+from europarl.rules import ProtocolEnHtmlRule, ProtocolEnPdfRule, get_term
 
 
 @pytest.mark.parametrize(
@@ -75,7 +75,7 @@ def test_get_term(date, expected):
     ],
 )
 def test_get_url_protocol_en_pdf(date, expected):
-    assert protocol_en_pdf(date=date) == expected
+    assert ProtocolEnPdfRule.url(date=date) == expected
 
 
 @pytest.mark.parametrize(
@@ -128,4 +128,4 @@ def test_get_url_protocol_en_pdf(date, expected):
     ],
 )
 def test_get_url_protocol_en_html(date, expected):
-    assert protocol_en_html(date) == expected
+    assert ProtocolEnHtmlRule.url(date) == expected

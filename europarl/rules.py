@@ -1,14 +1,15 @@
+from abc import ABC
 from datetime import date
 
 RULES = dict()
 BASE_URL = "https://europarl.europa.eu/doceo/document/"
 
 
-def register_rule(func):
+def register_rule(cls):
     """Register a function as a rule"""
-    RULES[func.__name__] = func
+    RULES[cls.name] = cls
 
-    return func
+    return cls
 
 
 def get_term(day) -> str:
@@ -41,136 +42,104 @@ def get_term(day) -> str:
     return "0"
 
 
-def protocol_url(language, format, date):
-    document_url = (
-        BASE_URL
-        + "PV-"
-        + get_term(date)
-        + "-"
-        + date.strftime("%Y-%m-%d")
-        + "_"
-        + language
-        + format
-    )
-    return document_url
+class ProtocolRule(ABC):
+
+    language = None
+    format = None
+
+    @classmethod
+    def url(cls, date):
+        document_url = (
+            BASE_URL
+            + "PV-"
+            + get_term(date)
+            + "-"
+            + date.strftime("%Y-%m-%d")
+            + "_"
+            + cls.language
+            + cls.format
+        )
+        return document_url
 
 
 @register_rule
-def session_day(date):
-    return protocol_url(
-        language=session_day.language, format=session_day.format, date=date
-    )
-
-
-session_day.format = ".pdf"
-session_day.language = "EN"
+class SessionDayRule(ProtocolRule):
+    name = "session_day"
+    format = ".pdf"
+    language = "EN"
 
 
 @register_rule
-def protocol_en_pdf(date):
-    return protocol_url(
-        language=protocol_en_pdf.language, format=protocol_en_pdf.format, date=date
-    )
-
-
-protocol_en_pdf.format = ".pdf"
-protocol_en_pdf.language = "EN"
+class ProtocolEnPdfRule(ProtocolRule):
+    name = "protocol_en_pdf"
+    format = ".pdf"
+    language = "EN"
 
 
 @register_rule
-def protocol_en_html(date):
-    return protocol_url(
-        language=protocol_en_html.language, format=protocol_en_html.format, date=date
-    )
-
-
-protocol_en_html.format = ".html"
-protocol_en_html.language = "EN"
+class ProtocolEnHtmlRule(ProtocolRule):
+    name = "protocol_en_html"
+    format = ".html"
+    language = "EN"
 
 
 @register_rule
-def protocol_de_pdf(date):
-    return protocol_url(
-        language=protocol_de_pdf.language, format=protocol_de_pdf.format, date=date
-    )
-
-
-protocol_de_pdf.format = ".pdf"
-protocol_de_pdf.language = "DE"
+class ProtocolDePdfRule(ProtocolRule):
+    name = "protocol_de_pdf"
+    format = ".pdf"
+    language = "DE"
 
 
 @register_rule
-def protocol_de_html(date):
-    return protocol_url(
-        language=protocol_de_html.language, format=protocol_de_html.format, date=date
-    )
+class ProtocolDeHtmlRule(ProtocolRule):
+    name = "protocol_de_html"
+    format = ".html"
+    language = "DE"
 
 
-protocol_de_html.format = ".html"
-protocol_de_html.language = "DE"
+class WordProtocolRule(ABC):
 
+    language = None
+    format = None
 
-def word_protocol_url(language, format, date):
-    document_url = (
-        BASE_URL
-        + "CRE-"
-        + get_term(date)
-        + "-"
-        + date.strftime("%Y-%m-%d")
-        + "_"
-        + language
-        + format
-    )
-    return document_url
-
-
-@register_rule
-def word_protocol_en_pdf(date):
-    return word_protocol_url(
-        language=word_protocol_en_pdf.language,
-        format=word_protocol_en_pdf.format,
-        date=date,
-    )
-
-
-word_protocol_en_pdf.format = ".pdf"
-word_protocol_en_pdf.language = "EN"
+    @classmethod
+    def url(cls, date):
+        document_url = (
+            BASE_URL
+            + "CRE-"
+            + get_term(date)
+            + "-"
+            + date.strftime("%Y-%m-%d")
+            + "_"
+            + cls.language
+            + cls.format
+        )
+        return document_url
 
 
 @register_rule
-def word_protocol_en_html(date):
-    return word_protocol_url(
-        language=word_protocol_en_html.language,
-        format=word_protocol_en_html.format,
-        date=date,
-    )
-
-
-word_protocol_en_html.format = ".html"
-word_protocol_en_html.language = "EN"
+class WordProtocolEnPdfRule(WordProtocolRule):
+    name = "word_protocol_en_pdf"
+    format = ".pdf"
+    language = "EN"
 
 
 @register_rule
-def word_protocol_de_pdf(date):
-    return word_protocol_url(
-        language=word_protocol_de_pdf.language,
-        format=word_protocol_de_pdf.format,
-        date=date,
-    )
-
-
-word_protocol_de_pdf.format = ".pdf"
-word_protocol_de_pdf.language = "DE"
+class WordProtocolEnHtmlRule(WordProtocolRule):
+    name = "word_protocol_en_html"
+    format = ".html"
+    language = "EN"
 
 
 @register_rule
-def word_protocol_de_html(date):
-    return word_protocol_url(
-        language=word_protocol_de_html.language,
-        format=word_protocol_de_html.format,
-        date=date,
-    )
+class WordProtocolDePdfRule(WordProtocolRule):
+    name = "word_protocol_de_pdf"
+    format = ".pdf"
+    language = "DE"
 
 
-word_protocol_de_html.format = ".html"
-word_protocol_de_html.language = "DE"
+@register_rule
+class WordProtocolDeHtmlRule(WordProtocolRule):
+    name = "word_protocol_de_html"
+    format = ".html"
+    language = "DE"

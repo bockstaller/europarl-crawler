@@ -47,9 +47,9 @@ class Rules(Table):
         ids = []
 
         for rulename in rulenames:
-            func = getattr(rules, rulename)
-            language = getattr(func, "language", None)
-            filetype = getattr(func, "format", None)
+            rule = rules.RULES[rulename]
+            language = rule.language
+            filetype = rule.format
 
             with self.db.cursor() as db:
                 db.cur.execute(
@@ -131,7 +131,7 @@ class Rules(Table):
 
         url_ids = []
         for rule_id, rulename in active_rules:
-            url = rules.RULES[rulename](date)
+            url = rules.RULES[rulename].url(date)
             url_ids.append(u.save_url(date_id=date_id, rule_id=rule_id, url=url))
 
         return url_ids
@@ -143,7 +143,7 @@ class Rules(Table):
         s = SessionDay(self.db)
         date = s.get_date(id=date_id)[1]
 
-        url = rules.RULES[rulename](date)
+        url = rules.RULES[rulename].url(date)
 
         u = URLs(self.db)
         url_id = u.save_url(date_id=date_id, rule_id=rule_id, url=url)
