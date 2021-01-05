@@ -95,7 +95,9 @@ class SessionDay(Table):
                         LEFT JOIN rules on urls.rule_id = rules.id
                         WHERE rules.id = (SELECT id FROM rules WHERE rulename =%s) and status_code in (200,404))
                     LIMIT %s)
+                    ORDER by days ASC
                     LIMIT %s
+
 
 
                     """
