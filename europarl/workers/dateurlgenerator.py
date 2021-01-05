@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timedelta, timezone
 from queue import Full
 
 from europarl.db import DBInterface, Rules, SessionDay, URLs
@@ -69,6 +70,9 @@ class DateUrlGenerator(ProcWorker):
 
         if len(self.todo_date_rule_combos) == 0:
             self.todo_date_rule_combos = self.get_new_combos(limit=self.PREFETCH_LIMIT)
+            if len(self.todo_date_rule_combos) == 0:
+                time.sleep(self.DEFAULT_POLLING_TIMEOUT * 10)
+
             return
 
         if self.url_id is None:
