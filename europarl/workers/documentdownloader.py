@@ -128,15 +128,13 @@ class DocumentDownloader(QueueProcWorker):
             open(filepath, "wb").write(resp.content)
 
             doc_id = self.docs.register_document(filepath=filepath, filename=file_uuid)
-
-        self.logger.info("Storing crawling result for: {}".format(self.url_str))
-
-        self.request.mark_as_requested(
-            self.url_id,
-            status_code=resp.status_code,
-            redirected_url=resp.url,
-            document_id=doc_id,
-        )
+        else:
+            self.request.mark_as_requested(
+                self.url_id,
+                status_code=resp.status_code,
+                redirected_url=resp.url,
+                document_id=doc_id,
+            )
 
         self.logger.info("Crawled: {}".format(self.url_str))
 
