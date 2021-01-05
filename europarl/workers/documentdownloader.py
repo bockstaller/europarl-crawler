@@ -69,6 +69,7 @@ class DocumentDownloader(QueueProcWorker):
             if self.url_id is None:
                 self.work_q.safe_put(token)
                 time.sleep(self.DEFAULT_POLLING_TIMEOUT)
+                self.logger.debug("No work - returning")
                 return
 
             url = self.url.get_url(id=self.url_id)

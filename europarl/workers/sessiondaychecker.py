@@ -182,7 +182,7 @@ class SessionDayChecker(QueueProcWorker):
                 self.work_q.put(token, timeout=self.DEFAULT_POLLING_TIMEOUT)
             except Full:
                 pass
-            self.logger.info("Still sleeping, Returned Token to Bucket")
+            self.logger.debug("Still sleeping, Returned Token to Bucket")
             time.sleep(self.DEFAULT_POLLING_TIMEOUT)
             return
 
