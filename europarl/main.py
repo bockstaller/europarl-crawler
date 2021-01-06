@@ -14,7 +14,7 @@ import requests
 from dotenv import load_dotenv
 
 from europarl import rules
-from europarl.db import DBInterface, Rules, SessionDay, URLs, tables
+from europarl.db import DBInterface, Documents, Rules, SessionDay, URLs, tables
 from europarl.mptools import (
     EventMessage,
     MainContext,
@@ -27,6 +27,7 @@ from europarl.mptools import (
 from europarl.workers import (
     DateUrlGenerator,
     DocumentDownloader,
+    PostProcessingScheduler,
     SessionDayChecker,
     TokenBucketWorker,
 )
@@ -46,6 +47,7 @@ def main():
 
         token_bucket_q = main_ctx.MPQueue(100)
         url_q = main_ctx.MPQueue(10)
+        document_q = main_ctx.MPQueue(30)
 
         main_ctx.Proc(
             token_bucket_q,
@@ -74,6 +76,13 @@ def main():
             name="TokenGenerator",
             worker_class=TokenBucketWorker,
             config=config["TokenBucketWorker"],
+        )
+
+        main_ctx.Proc(
+            document_q,
+            name="PostProcessingScheduler",
+            worker_class=PostProcessingScheduler,
+            config=config["PostProcessingScheduler"],
         )
 
         while not main_ctx.shutdown_event.is_set():
@@ -115,6 +124,10 @@ class Context(MainContext):
         # drop uncrawled urls last to prevent race conditions
         self.logger.info("Dropping uncrawled urls")
         urls.drop_uncrawled_urls()
+
+        docs = Documents(temp_db)
+        self.logger.info("Resetting scheduled documents")
+        docs.reset_enqueued()
 
 
 if __name__ == "__main__":

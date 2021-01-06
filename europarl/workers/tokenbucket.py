@@ -95,7 +95,7 @@ class TokenBucketWorker(TimerProcWorker):
             self.throttle()
             return
         if any(int(item) in [200, 404] for item in status_codes):
-            self.logger.info("Requesting unthrottling")
+            self.logger.debug("Requesting unthrottling")
             self.unthrottle()
             return
 

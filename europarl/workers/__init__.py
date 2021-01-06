@@ -1,4 +1,5 @@
 from .dateurlgenerator import DateUrlGenerator
 from .documentdownloader import DocumentDownloader
+from .postprocessingscheduler import PostProcessingScheduler
 from .sessiondaychecker import SessionDayChecker
 from .tokenbucket import TokenBucketWorker
