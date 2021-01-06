@@ -92,11 +92,32 @@ class DocumentDownloader(QueueProcWorker):
                 "Response for: {} is {}".format(self.url_str, resp.status_code)
             )
 
+            doc_id = None
+            # if successfull store file
+            if resp.status_code == 200:
+                self.logger.debug("Storing file for {}".format(self.url_str))
+                file_uuid = str(uuid.uuid4())
+                filename = file_uuid + self.filetype
+                abspath = os.path.abspath(self.DATAPATH)
+                filepath = abspath + "/" + filename
+
+                open(filepath, "wb").write(resp.content)
+
+                doc_id = self.docs.register_document(
+                    filepath=filepath, filename=file_uuid
+                )
+
             self.request.mark_as_requested(
-                url_id=self.url_id,
+                self.url_id,
                 status_code=resp.status_code,
                 redirected_url=resp.url,
+                document_id=doc_id,
             )
+
+            self.logger.info("Crawled: {}".format(self.url_str))
+
+            self.url_id, self.url_str, self.filetype = None, None, None
+
         except requests.ReadTimeout as e:
 
             self.logger.warn("Timeout for url: {}".format(self.url_str))
@@ -116,27 +137,3 @@ class DocumentDownloader(QueueProcWorker):
             )
             time.sleep(self.DEFAULT_POLLING_TIMEOUT)
             return
-
-        doc_id = None
-        # if successfull store file
-        if resp.status_code == 200:
-            self.logger.debug("Storing file for {}".format(self.url_str))
-            file_uuid = str(uuid.uuid4())
-            filename = file_uuid + self.filetype
-            abspath = os.path.abspath(self.DATAPATH)
-            filepath = abspath + "/" + filename
-
-            open(filepath, "wb").write(resp.content)
-
-            doc_id = self.docs.register_document(filepath=filepath, filename=file_uuid)
-        else:
-            self.request.mark_as_requested(
-                self.url_id,
-                status_code=resp.status_code,
-                redirected_url=resp.url,
-                document_id=doc_id,
-            )
-
-        self.logger.info("Crawled: {}".format(self.url_str))
-
-        self.url_id, self.url_str, self.filetype = None, None, None
