@@ -47,7 +47,7 @@ class Documents(Table):
                     LEFT JOIN requests ON requests.document_id=documents.id
                     LEFT JOIN urls on requests.url_id=urls.id
                     LEFT JOIN rules on urls.rule_id=rules.id
-                    WHERE documents.data is NULL AND rules.rulename is not NULL
+                    WHERE documents.data is NULL AND rules.rulename is not NULL and documents.enqueued =False
                     ORDER by requests.requested_at ASC
                     LIMIT %s
                 """
@@ -63,7 +63,7 @@ class Documents(Table):
             result.append(
                 {
                     "rule": {"id": item[0], "name": item[1]},
-                    "document": {"id": item[2], "path": item[3]},
+                    "document": {"id": item[2], "filepath": item[3]},
                 }
             )
 

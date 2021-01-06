@@ -28,6 +28,7 @@ from europarl.workers import (
     DateUrlGenerator,
     DocumentDownloader,
     PostProcessingScheduler,
+    PostProcessingWorker,
     SessionDayChecker,
     TokenBucketWorker,
 )
@@ -77,6 +78,16 @@ def main():
             worker_class=TokenBucketWorker,
             config=config["TokenBucketWorker"],
         )
+
+        for instance_id in range(
+            int(config["PostProcessingWorker"].get("Instances", 1))
+        ):
+            main_ctx.Proc(
+                document_q,
+                name="PostProcessingWorker_{}".format(instance_id),
+                worker_class=PostProcessingWorker,
+                config=config["PostProcessingWorker"],
+            )
 
         main_ctx.Proc(
             document_q,

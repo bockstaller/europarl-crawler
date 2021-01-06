@@ -42,10 +42,23 @@ def get_term(day) -> str:
     return "0"
 
 
-class ProtocolRule(ABC):
-
+class Rule(ABC):
     language = None
     format = None
+
+    @classmethod
+    def extract_data(cls, filepath):
+        raise NotImplementedError
+
+    @classmethod
+    def url(cls, date):
+        raise NotImplementedError
+
+
+class ProtocolRule(Rule):
+    @classmethod
+    def extract_data(cls, filepath):
+        return {"test": "Test"}
 
     @classmethod
     def url(cls, date):
@@ -97,11 +110,7 @@ class ProtocolDeHtmlRule(ProtocolRule):
     language = "DE"
 
 
-class WordProtocolRule(ABC):
-
-    language = None
-    format = None
-
+class WordProtocolRule(Rule):
     @classmethod
     def url(cls, date):
         document_url = (
