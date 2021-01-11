@@ -34,11 +34,16 @@ class PostProcessingWorker(QueueProcWorker):
 
     def main_func(self, document):
 
-        data = None
         try:
-            data = rules.RULES[document["rule"]["name"]].extract_data(
+            metadata = self.docs.get_metadata(document["document"]["id"])
+
+            document_data = None
+            document_data = rules.RULES[document["rule"]["name"]].extract_data(
                 document["document"]["filepath"]
             )
+
+            data = {**metadata, **document_data}
+
             self.docs.set_data(document["document"]["id"], data)
             self.logger.info("Processed document {}".format(document["document"]["id"]))
         except NotImplementedError:

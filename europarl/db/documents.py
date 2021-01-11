@@ -115,5 +115,35 @@ class Documents(Table):
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [json.dumps(data), document_id],
+                [json.dumps(data, default=str), document_id],
             )
+
+    def get_metadata(self, document_id):
+        query = """ SELECT documents.filepath, documents.downloaded_at, requests.redirected_url, session_days.dates, rules.rulename, rules.filetype, rules.language
+        FROM documents
+        LEFT JOIN requests ON requests.document_id = documents.id
+        LEFT JOIN urls on urls.id=requests.url_id
+        LEFT JOIN session_days on urls.date_id = session_days.id
+        LEFT JOIN rules on urls.rule_id = rules.id
+        WHERE documents.id = %s
+        """
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+                [document_id],
+            )
+            data = db.cur.fetchone()
+
+        keys = [
+            "filepath",
+            "downloaded_at",
+            "url",
+            "session_date",
+            "rulename",
+            "filetype",
+            "language",
+        ]
+
+        result = dict(zip(keys, data))
+        return result
