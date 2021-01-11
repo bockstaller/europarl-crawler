@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from multiprocessing.queues import Full
 
 import requests
+from elasticsearch import Elasticsearch
 
 from europarl import rules
 from europarl.db import DBInterface, Documents, Request, URLs
@@ -17,9 +18,17 @@ class PostProcessingWorker(QueueProcWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def init_args(self, args):
+        (
+            self.work_q,
+            self.es_config,
+        ) = args
+
     def startup(self):
         """"""
         super().startup()
+
+        self.es = Elasticsearch(self.es_config["Connection"])
 
         self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
@@ -44,8 +53,16 @@ class PostProcessingWorker(QueueProcWorker):
 
             data = {**metadata, **document_data}
 
+            ret = self.es.create(
+                index=self.es_config["Indexname"],
+                id=document["document"]["id"],
+                body=data,
+            )
+            print(ret)
+
             self.docs.set_data(document["document"]["id"], data)
             self.logger.info("Processed document {}".format(document["document"]["id"]))
+
         except NotImplementedError:
             self.logger.info(
                 "Document {} not processed. No postprocessing rule implemented".format(

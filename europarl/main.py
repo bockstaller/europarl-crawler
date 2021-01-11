@@ -12,6 +12,7 @@ from queue import Full
 
 import requests
 from dotenv import load_dotenv
+from elasticsearch import Elasticsearch
 
 from europarl import rules
 from europarl.db import DBInterface, Documents, Rules, SessionDay, URLs, tables
@@ -40,11 +41,15 @@ def main():
     with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
+
         init_rules(main_ctx.config)
 
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
+
+        es = Elasticsearch(config["Elasticsearch"].get("Connection"))
+        create_index(main_ctx.config, es)
 
         token_bucket_q = main_ctx.MPQueue(100)
         url_q = main_ctx.MPQueue(10)
@@ -84,6 +89,7 @@ def main():
         ):
             main_ctx.Proc(
                 document_q,
+                config["Elasticsearch"],
                 name="PostProcessingWorker_{}".format(instance_id),
                 worker_class=PostProcessingWorker,
                 config=config["PostProcessingWorker"],
@@ -106,6 +112,12 @@ def read_config():
     config = configparser.ConfigParser()
     config.read("../settings.ini")
     return config
+
+
+def create_index(config, es):
+    indexname = config["Elasticsearch"].get("Indexname")
+    if not es.indices.exists(indexname):
+        es.indices.create(indexname)
 
 
 def create_table_structure(config):
