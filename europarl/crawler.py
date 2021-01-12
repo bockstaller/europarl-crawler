@@ -1,5 +1,6 @@
 import configparser
 import datetime
+import json
 import logging
 import multiprocessing
 import os
@@ -12,7 +13,6 @@ from queue import Full
 
 import requests
 from dotenv import load_dotenv
-from elasticsearch import Elasticsearch
 
 from europarl import rules
 from europarl.db import DBInterface, Documents, Rules, SessionDay, URLs, tables
@@ -48,12 +48,8 @@ def main():
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
         )
 
-        es = Elasticsearch(config["Elasticsearch"].get("Connection"))
-        create_index(main_ctx.config, es)
-
         token_bucket_q = main_ctx.MPQueue(100)
         url_q = main_ctx.MPQueue(10)
-        document_q = main_ctx.MPQueue(30)
 
         main_ctx.Proc(
             token_bucket_q,
@@ -84,24 +80,6 @@ def main():
             config=config["TokenBucketWorker"],
         )
 
-        for instance_id in range(
-            int(config["PostProcessingWorker"].get("Instances", 1))
-        ):
-            main_ctx.Proc(
-                document_q,
-                config["Elasticsearch"],
-                name="PostProcessingWorker_{}".format(instance_id),
-                worker_class=PostProcessingWorker,
-                config=config["PostProcessingWorker"],
-            )
-
-        main_ctx.Proc(
-            document_q,
-            name="PostProcessingScheduler",
-            worker_class=PostProcessingScheduler,
-            config=config["PostProcessingScheduler"],
-        )
-
         while not main_ctx.shutdown_event.is_set():
             event = main_ctx.event_queue.safe_get()
             if not event:
@@ -112,12 +90,6 @@ def read_config():
     config = configparser.ConfigParser()
     config.read("../settings.ini")
     return config
-
-
-def create_index(config, es):
-    indexname = config["Elasticsearch"].get("Indexname")
-    if not es.indices.exists(indexname):
-        es.indices.create(indexname)
 
 
 def create_table_structure(config):
@@ -147,10 +119,6 @@ class Context(MainContext):
         # drop uncrawled urls last to prevent race conditions
         self.logger.info("Dropping uncrawled urls")
         urls.drop_uncrawled_urls()
-
-        docs = Documents(temp_db)
-        self.logger.info("Resetting scheduled documents")
-        docs.reset_enqueued()
 
 
 if __name__ == "__main__":

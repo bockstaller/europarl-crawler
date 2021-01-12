@@ -1,0 +1,86 @@
+{
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "htmlStripAnalyzer": {
+                    "type": "custom",
+                    "tokenizer": "standard",
+                    "filter": [
+                        "lowercase"
+                    ],
+                    "char_filter": [
+                        "html_strip"
+                    ]
+                }
+            }
+        }
+    },
+    "mappings": {
+        "properties": {
+            "downloaded_at": {
+                "type": "date"
+            },
+            "filepath": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            },
+            "filesize": {
+                "type": "long"
+            },
+            "filetype": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            },
+            "content": {
+                "type": "text",
+                "analyzer": "htmlStripAnalyzer",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            },
+            "language": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            },
+            "rulename": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            },
+            "session_date": {
+                "type": "date"
+            },
+            "url": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            }
+        }
+    }
+}
