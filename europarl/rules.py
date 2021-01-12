@@ -1,3 +1,5 @@
+import codecs
+import os
 from abc import ABC
 from datetime import date
 
@@ -55,10 +57,23 @@ class Rule(ABC):
         raise NotImplementedError
 
 
+def filesize(filepath):
+    return {"filesize": os.path.getsize(filepath)}
+
+
+def filecontent(filepath):
+    with codecs.open(filepath, "r") as file:
+        text = file.read()
+
+    return {"content": text}
+
+
 class ProtocolRule(Rule):
     @classmethod
     def extract_data(cls, filepath):
-        return {"test": "Test"}
+        data = {}
+        data.update(filesize(filepath))
+        return data
 
     @classmethod
     def url(cls, date):
@@ -95,6 +110,13 @@ class ProtocolEnHtmlRule(ProtocolRule):
     format = ".html"
     language = "EN"
 
+    @classmethod
+    def extract_data(cls, filepath):
+        data = {}
+        data.update(filesize(filepath))
+        data.update(filecontent(filepath))
+        return data
+
 
 @register_rule
 class ProtocolDePdfRule(ProtocolRule):
@@ -108,6 +130,13 @@ class ProtocolDeHtmlRule(ProtocolRule):
     name = "protocol_de_html"
     format = ".html"
     language = "DE"
+
+    @classmethod
+    def extract_data(cls, filepath):
+        data = {}
+        data.update(filesize(filepath))
+        data.update(filecontent(filepath))
+        return data
 
 
 class WordProtocolRule(Rule):
@@ -125,6 +154,12 @@ class WordProtocolRule(Rule):
         )
         return document_url
 
+    @classmethod
+    def extract_data(cls, filepath):
+        data = {}
+        data.update(filesize(filepath))
+        return data
+
 
 @register_rule
 class WordProtocolEnPdfRule(WordProtocolRule):
@@ -139,6 +174,13 @@ class WordProtocolEnHtmlRule(WordProtocolRule):
     format = ".html"
     language = "EN"
 
+    @classmethod
+    def extract_data(cls, filepath):
+        data = {}
+        data.update(filesize(filepath))
+        data.update(filecontent(filepath))
+        return data
+
 
 @register_rule
 class WordProtocolDePdfRule(WordProtocolRule):
@@ -152,3 +194,10 @@ class WordProtocolDeHtmlRule(WordProtocolRule):
     name = "word_protocol_de_html"
     format = ".html"
     language = "DE"
+
+    @classmethod
+    def extract_data(cls, filepath):
+        data = {}
+        data.update(filesize(filepath))
+        data.update(filecontent(filepath))
+        return data
