@@ -29,7 +29,6 @@ class PostProcessingWorker(QueueProcWorker):
         super().startup()
 
         self.es = Elasticsearch(self.es_config["Connection"])
-
         self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
 
@@ -53,7 +52,7 @@ class PostProcessingWorker(QueueProcWorker):
 
             data = {**metadata, **document_data}
 
-            ret = self.es.create(
+            ret = self.es.index(
                 index=self.es_config["Indexname"],
                 id=document["document"]["id"],
                 body=data,

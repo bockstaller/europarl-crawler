@@ -3,6 +3,8 @@ import os
 from abc import ABC
 from datetime import date
 
+from bs4 import BeautifulSoup
+
 RULES = dict()
 BASE_URL = "https://europarl.europa.eu/doceo/document/"
 
@@ -62,8 +64,9 @@ def filesize(filepath):
 
 
 def filecontent(filepath):
-    with codecs.open(filepath, "r") as file:
-        text = file.read()
+    with open(filepath, "r") as file:
+        soup = BeautifulSoup(file.read(), "html.parser")
+        text = soup.get_text()
 
     return {"content": text}
 

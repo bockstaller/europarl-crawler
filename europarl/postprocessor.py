@@ -12,8 +12,7 @@ from datetime import date
 from queue import Full
 
 import requests
-from dotenv import load_dotenv
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, helpers
 
 from europarl import rules
 from europarl.crawler import create_table_structure, init_rules, read_config
@@ -27,14 +26,7 @@ from europarl.mptools import (
     default_signal_handler,
     init_signals,
 )
-from europarl.workers import (
-    DateUrlGenerator,
-    DocumentDownloader,
-    PostProcessingScheduler,
-    PostProcessingWorker,
-    SessionDayChecker,
-    TokenBucketWorker,
-)
+from europarl.workers import PostProcessingScheduler, PostProcessingWorker
 
 
 def main():
@@ -43,7 +35,9 @@ def main():
     with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
-        create_index(config)
+        create_index(main_ctx.config)
+
+        bulkload_index(main_ctx.config)
 
         init_rules(main_ctx.config)
 
@@ -87,6 +81,40 @@ def create_index(config):
         es.indices.create(index=indexname, body=index_definition)
 
     es.close()
+
+
+def bulkload_index(config):
+    es = Elasticsearch(config["Elasticsearch"].get("Connection"))
+    indexname = config["Elasticsearch"].get("Indexname")
+
+    docs = Documents(DBInterface(config=config["General"]))
+
+    docs_generator = docs.get_all_data()
+
+    streaming_bulk_iterator = helpers.streaming_bulk(
+        es,
+        get_actions(docs_generator, indexname, "index"),
+        raise_on_error=False,
+        chunk_size=100,
+    )
+
+    for ok, item in streaming_bulk_iterator:
+        if not ok:
+            print("fail")
+        else:
+            print("success")
+
+
+def get_actions(docs_generator, indexname, op_type):
+    for row in docs_generator:
+        print(row[0])
+        value = {
+            "_id": row[0],
+            "_index": indexname,
+            "_op_type": op_type,
+            **row[1],
+        }
+        yield (value)
 
 
 class Context(MainContext):

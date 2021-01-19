@@ -5,11 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: main.py",
+            "name": "Crawler",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/europarl/main.py",
-            "cwd": "${workspaceFolder}/src/europarl/",
+            "program": "${workspaceFolder}/europarl/crawler.py",
+            "cwd": "${workspaceFolder}/europarl/",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Postprocessor",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/europarl/postprocessor.py",
+            "cwd": "${workspaceFolder}/europarl/",
             "console": "integratedTerminal"
         },
     ]

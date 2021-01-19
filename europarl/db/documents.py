@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from .tables import Table
 
@@ -47,7 +47,7 @@ class Documents(Table):
                     LEFT JOIN requests ON requests.document_id=documents.id
                     LEFT JOIN urls on requests.url_id=urls.id
                     LEFT JOIN rules on urls.rule_id=rules.id
-                    WHERE documents.data is NULL AND rules.rulename is not NULL and documents.enqueued =False
+                    WHERE rules.rulename is not NULL and documents.enqueued =False
                     ORDER by requests.requested_at ASC
                     LIMIT %s
                 """
@@ -112,20 +112,29 @@ class Documents(Table):
                     WHERE documents.id=%s
                 """
 
+        def default_converter(o):
+            if isinstance(o, datetime):
+                return o.isoformat()
+            if isinstance(o, date):
+                return o.isoformat()
+            else:
+                str(o)
+
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [json.dumps(data, default=str), document_id],
+                [json.dumps(data, default=default_converter), document_id],
             )
 
     def get_metadata(self, document_id):
-        query = """ SELECT documents.filepath, documents.downloaded_at, requests.redirected_url, session_days.dates, rules.rulename, rules.filetype, rules.language
+        query = """SET TIMEZONE='UTC';
+        SELECT documents.filepath, documents.downloaded_at, requests.redirected_url, session_days.dates, rules.rulename, rules.filetype, rules.language
         FROM documents
         LEFT JOIN requests ON requests.document_id = documents.id
         LEFT JOIN urls on urls.id=requests.url_id
         LEFT JOIN session_days on urls.date_id = session_days.id
         LEFT JOIN rules on urls.rule_id = rules.id
-        WHERE documents.id = %s
+        WHERE documents.id = %s;
         """
 
         with self.db.cursor() as db:
@@ -147,3 +156,16 @@ class Documents(Table):
 
         result = dict(zip(keys, data))
         return result
+
+    def get_all_data(self):
+        query = """ SELECT id, data
+                    FROM documents
+                    WHERE data is not NULL"""
+
+        with self.db.cursor(name="get_all_data", withhold=True) as db:
+            db.cur.execute(
+                query,
+            )
+
+            for row in db.cur:
+                yield row

@@ -101,7 +101,7 @@ class DBInterface:
         """
         # Code to acquire the db connection
         self.connect()
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor(*args, **kwargs)
 
         db = {"con": self.connection, "cur": cursor}
         db = SimpleNamespace(**db)

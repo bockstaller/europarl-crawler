@@ -1,24 +1,9 @@
 {
-    "settings": {
-        "analysis": {
-            "analyzer": {
-                "htmlStripAnalyzer": {
-                    "type": "custom",
-                    "tokenizer": "standard",
-                    "filter": [
-                        "lowercase"
-                    ],
-                    "char_filter": [
-                        "html_strip"
-                    ]
-                }
-            }
-        }
-    },
     "mappings": {
         "properties": {
             "downloaded_at": {
-                "type": "date"
+                "type": "date",
+                "format": "strict_date_optional_time_nanos"
             },
             "filepath": {
                 "type": "text",
@@ -42,14 +27,7 @@
                 }
             },
             "content": {
-                "type": "text",
-                "analyzer": "htmlStripAnalyzer",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "text"
             },
             "language": {
                 "type": "text",
