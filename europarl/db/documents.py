@@ -169,3 +169,31 @@ class Documents(Table):
 
             for row in db.cur:
                 yield row
+
+    def reset_all_postprocessing(self):
+        query = """ UPDATE documents
+                    SET enqueued=False, data=NULL
+                    WHERE true;
+                    """
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+            )
+            result = db.cur.fetchone()
+
+        return result
+
+    def reset_postprocessing_by_rule(self, rule_id):
+        query = """ UPDATE documents as d
+                    SET enqueued=False, data=NULL
+                    FROM requests as r
+                    LEFT JOIN urls ON urls.id = r.url_id
+                    WHERE urls.rule_id = %s AND r.document_id=d.id
+                    """
+
+        with self.db.cursor() as db:
+            db.cur.execute(query, [rule_id])
+            result = db.cur.fetchone()
+
+        return result

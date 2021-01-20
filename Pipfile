@@ -29,6 +29,7 @@ pytest-cov = "*"
 fake-useragent = "*"
 elasticsearch = "*"
 bs4 = "*"
+beautifultable = "*"
 
 [scripts]
 test = "python -m pytest ."

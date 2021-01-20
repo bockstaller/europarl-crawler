@@ -59,6 +59,21 @@ class Rules(Table):
                 ids.append(db.cur.fetchone()[0])
         return ids
 
+    def get_rules(self):
+        query = """ SELECT *
+                    FROM rules
+                    ORDER BY id;
+        """
+
+        with self.db.cursor() as db:
+            db.cur.execute(query)
+            values = db.cur.fetchall()
+
+        keys = ["id", "name", "filetype", "language", "active"]
+        values = [list(row) for row in values]
+
+        return values, keys
+
     def get_rule(self, id=None, rulename=None):
         """
         Gets a rule out of the database either by a passed rulename or by a passed id. One parameter must be provided.
