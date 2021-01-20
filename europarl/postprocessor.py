@@ -35,9 +35,6 @@ def main():
     with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
-        create_index(main_ctx.config)
-
-        bulkload_index(main_ctx.config)
 
         init_rules(main_ctx.config)
 
@@ -52,7 +49,6 @@ def main():
         ):
             main_ctx.Proc(
                 document_q,
-                config["Elasticsearch"],
                 name="PostProcessingWorker_{}".format(instance_id),
                 worker_class=PostProcessingWorker,
                 config=config["PostProcessingWorker"],
@@ -69,52 +65,6 @@ def main():
             event = main_ctx.event_queue.safe_get()
             if not event:
                 continue
-
-
-def create_index(config):
-    es = Elasticsearch(config["Elasticsearch"].get("Connection"))
-    indexname = config["Elasticsearch"].get("Indexname")
-    if not es.indices.exists(indexname):
-        with open("./europarl_index.json", "r") as file:
-            index_definition = json.load(file)
-
-        es.indices.create(index=indexname, body=index_definition)
-
-    es.close()
-
-
-def bulkload_index(config):
-    es = Elasticsearch(config["Elasticsearch"].get("Connection"))
-    indexname = config["Elasticsearch"].get("Indexname")
-
-    docs = Documents(DBInterface(config=config["General"]))
-
-    docs_generator = docs.get_all_data()
-
-    streaming_bulk_iterator = helpers.streaming_bulk(
-        es,
-        get_actions(docs_generator, indexname, "index"),
-        raise_on_error=False,
-        chunk_size=100,
-    )
-
-    for ok, item in streaming_bulk_iterator:
-        if not ok:
-            print("fail")
-        else:
-            print("success")
-
-
-def get_actions(docs_generator, indexname, op_type):
-    for row in docs_generator:
-        print(row[0])
-        value = {
-            "_id": row[0],
-            "_index": indexname,
-            "_op_type": op_type,
-            **row[1],
-        }
-        yield (value)
 
 
 class Context(MainContext):

@@ -262,8 +262,8 @@ def proc_worker_wrapper(
 
 
 class Proc:
-    STARTUP_WAIT_SECS = 3.0
-    SHUTDOWN_WAIT_SECS = 3.0
+    STARTUP_WAIT_SECS = 10.0
+    SHUTDOWN_WAIT_SECS = 10.0
 
     def __init__(
         self,

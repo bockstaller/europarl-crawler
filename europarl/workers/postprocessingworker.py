@@ -18,17 +18,10 @@ class PostProcessingWorker(QueueProcWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def init_args(self, args):
-        (
-            self.work_q,
-            self.es_config,
-        ) = args
-
     def startup(self):
         """"""
         super().startup()
 
-        self.es = Elasticsearch(self.es_config["Connection"])
         self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
 
@@ -52,14 +45,8 @@ class PostProcessingWorker(QueueProcWorker):
 
             data = {**metadata, **document_data}
 
-            ret = self.es.index(
-                index=self.es_config["Indexname"],
-                id=document["document"]["id"],
-                body=data,
-            )
-            print(ret)
-
             self.docs.set_data(document["document"]["id"], data)
+
             self.logger.info("Processed document {}".format(document["document"]["id"]))
 
         except NotImplementedError:

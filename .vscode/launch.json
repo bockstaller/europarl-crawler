@@ -20,5 +20,13 @@
             "cwd": "${workspaceFolder}/europarl/",
             "console": "integratedTerminal"
         },
+        {
+            "name": "Indexer",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/europarl/indexer.py",
+            "cwd": "${workspaceFolder}/europarl/",
+            "console": "integratedTerminal"
+        },
     ]
 }

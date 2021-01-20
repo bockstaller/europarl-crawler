@@ -1,6 +1,8 @@
 import json
 from datetime import date, datetime, timezone
 
+from psycopg2.extras import execute_values
+
 from .tables import Table
 
 
@@ -16,6 +18,8 @@ class Documents(Table):
                             enqueued boolean DEFAULT False,
                             data jsonb,
                             downloaded_at timestamp with time zone,
+                            indexed boolean DEFAULT False,
+                            reseted boolean DEFAULT False,
                             CONSTRAINT documents_pkey PRIMARY KEY (id)
                           );"""
 
@@ -157,18 +161,35 @@ class Documents(Table):
         result = dict(zip(keys, data))
         return result
 
-    def get_all_data(self):
+    def get_unindexed_data(self, limit=100):
         query = """ SELECT id, data
                     FROM documents
-                    WHERE data is not NULL"""
+                    WHERE data is not NULL
+                    AND indexed = false
+                    LIMIT %s"""
 
-        with self.db.cursor(name="get_all_data", withhold=True) as db:
+        with self.db.cursor() as db:
             db.cur.execute(
                 query,
+                [
+                    limit,
+                ],
             )
 
-            for row in db.cur:
-                yield row
+            res = db.cur.fetchall()
+
+        return res
+
+    def set_indexed(self, ids):
+        query = """ UPDATE documents as d
+                    SET indexed = data.indexed
+                    FROM (values %s) as data(id, indexed)
+                    WHERE data.id =d.id;
+                """
+
+        with self.db.cursor() as db:
+            execute_values(db.cur, query, ids, template=None, page_size=100)
+            return
 
     def reset_all_postprocessing(self):
         query = """ UPDATE documents
