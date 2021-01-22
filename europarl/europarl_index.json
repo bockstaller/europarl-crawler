@@ -6,58 +6,28 @@
                 "format": "strict_date_optional_time_nanos"
             },
             "filepath": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "keyword"
             },
             "filesize": {
                 "type": "long"
             },
             "filetype": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "keyword"
             },
             "content": {
                 "type": "text"
             },
             "language": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "keyword"
             },
             "rulename": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "text"
             },
             "session_date": {
                 "type": "date"
             },
             "url": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "keyword"
             }
         }
     }

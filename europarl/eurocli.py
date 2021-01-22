@@ -163,7 +163,7 @@ def indexing_reindex(ctx, mapping):
 
     print(body)
 
-    res = ctx.obj["es"].reindex(body, refresh=True)
+    res = ctx.obj["es"].reindex(body, refresh=True, wait_for_completion=False)
     print(res)
 
     click.echo(new_index)
