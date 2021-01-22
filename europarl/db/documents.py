@@ -1,7 +1,7 @@
 import json
 from datetime import date, datetime, timezone
 
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_batch
 
 from .tables import Table
 
@@ -19,7 +19,7 @@ class Documents(Table):
                             data jsonb,
                             downloaded_at timestamp with time zone,
                             indexed boolean DEFAULT False,
-                            reseted boolean DEFAULT False,
+                            unindex boolean DEFAULT False,
                             CONSTRAINT documents_pkey PRIMARY KEY (id)
                           );"""
 
@@ -181,15 +181,15 @@ class Documents(Table):
         return res
 
     def set_indexed(self, ids):
-        query = """ UPDATE documents as d
-                    SET indexed = data.indexed
-                    FROM (values %s) as data(id, indexed)
-                    WHERE data.id =d.id;
+        query = """ UPDATE documents
+                    SET indexed = true
+                    WHERE documents.id =%s;
                 """
 
         with self.db.cursor() as db:
-            execute_values(db.cur, query, ids, template=None, page_size=100)
-            return
+            execute_batch(db.cur, query, ids)
+
+        return
 
     def reset_all_postprocessing(self):
         query = """ UPDATE documents
@@ -201,13 +201,12 @@ class Documents(Table):
             db.cur.execute(
                 query,
             )
-            result = db.cur.fetchone()
 
-        return result
+        return
 
     def reset_postprocessing_by_rule(self, rule_id):
         query = """ UPDATE documents as d
-                    SET enqueued=False, data=NULL
+                    SET enqueued=False, data=NULL, unindex=d.indexed
                     FROM requests as r
                     LEFT JOIN urls ON urls.id = r.url_id
                     WHERE urls.rule_id = %s AND r.document_id=d.id
@@ -215,6 +214,31 @@ class Documents(Table):
 
         with self.db.cursor() as db:
             db.cur.execute(query, [rule_id])
-            result = db.cur.fetchone()
 
-        return result
+        return
+
+    def get_documents_to_unidex(self):
+        query = """ SELECT id
+                    FROM documents
+                    WHERE unindex = true
+                """
+
+        with self.db.cursor() as db:
+            db.cur.execute(
+                query,
+            )
+
+            res = db.cur.fetchall()
+
+        return res
+
+    def reset_unindex(self, ids):
+        query = """ UPDATE documents as d
+                    SET unindex = False, indexed=False
+                    WHERE d.id =%s;
+                """
+
+        with self.db.cursor() as db:
+            db.cur.executemany(query, ids)
+
+        return
