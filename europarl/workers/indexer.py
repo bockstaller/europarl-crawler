@@ -11,6 +11,13 @@ from elasticsearch import Elasticsearch, helpers
 
 from europarl import rules
 from europarl.db import DBInterface, Documents, Request, URLs
+from europarl.elasticinterface import (
+    get_actions,
+    get_actions_data,
+    get_current_index,
+    index_documents,
+    index_documents_data,
+)
 from europarl.mptools import ProcWorker
 
 
@@ -22,8 +29,8 @@ class Indexer(ProcWorker):
         """"""
         super().startup()
 
-        self.index = self.config["ESIndexname"]
         self.es = Elasticsearch(self.config["ESConnection"])
+        self.indexname = self.config["ESIndexname"]
 
         self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
@@ -36,40 +43,36 @@ class Indexer(ProcWorker):
         super().shutdown()
 
     def main_func(self):
+        try:
+            documents = self.docs.get_unindexed_data(limit=10)
 
-        documents = self.docs.get_unindexed_data()
+            if len(documents) > 0:
 
-        bulk_result = helpers.streaming_bulk(
-            self.es,
-            self.get_actions(documents, self.index, "create"),
-            raise_on_error=False,
-            chunk_size=100,
-        )
+                deleted_ids = index_documents(
+                    self.es, self.docs, "delete", self.indexname, documents, silent=True
+                )
 
-        successfull = [result[0] for result in list(bulk_result)]
+                if len(deleted_ids) > 0:
+                    self.logger.warn(
+                        "Deleted {} documents successfully out of {} documents in the batch".format(
+                            len(deleted_ids), len(documents)
+                        )
+                    )
 
-        indexed = list(
-            zip(
-                [document[0] for document in documents],
-                [result for result in successfull],
-            )
-        )
+                successfull_ids = index_documents_data(
+                    self.es, self.docs, "index", self.indexname, documents, silent=True
+                )
 
-        self.docs.set_indexed(indexed)
+                self.docs.set_indexed(successfull_ids)
 
-        self.logger.info(
-            "Indexed {} documents successfully out of {} documents in the batch".format(
-                sum(successfull), len(successfull)
-            )
-        )
+                self.logger.info(
+                    "Indexed {} documents successfully out of {} documents in the batch".format(
+                        len(successfull_ids), len(documents)
+                    )
+                )
 
-    def get_actions(self, documents, indexname, op_type):
-        for row in documents:
+        except Exception as e:
+            self.logger.error(e)
 
-            value = {
-                "_id": row[0],
-                "_index": indexname,
-                "_op_type": op_type,
-                **row[1],
-            }
-            yield (value)
+        finally:
+            time.sleep(self.DEFAULT_POLLING_TIMEOUT)
