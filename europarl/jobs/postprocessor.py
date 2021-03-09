@@ -14,9 +14,16 @@ from queue import Full
 import requests
 from elasticsearch import Elasticsearch, helpers
 
-from europarl import rules
-from europarl.crawler import create_table_structure, init_rules, read_config
-from europarl.db import DBInterface, Documents, Rules, SessionDay, URLs, tables
+from europarl import configuration, rules
+from europarl.db import (
+    DBInterface,
+    Documents,
+    Rules,
+    SessionDay,
+    URLs,
+    create_table_structure,
+    tables,
+)
 from europarl.mptools import (
     EventMessage,
     MainContext,
@@ -30,13 +37,13 @@ from europarl.workers import PostProcessingScheduler, PostProcessingWorker
 
 
 def main():
-    config = read_config()
+    config = configuration.read()
 
     with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
 
-        init_rules(main_ctx.config)
+        rules.init_rules(main_ctx.config)
 
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler

@@ -14,9 +14,16 @@ from queue import Full
 import requests
 from elasticsearch import Elasticsearch, helpers
 
-from europarl import rules
-from europarl.crawler import create_table_structure, init_rules, read_config
-from europarl.db import DBInterface, Documents, Rules, SessionDay, URLs, tables
+from europarl import configuration
+from europarl.db import (
+    DBInterface,
+    Documents,
+    Rules,
+    SessionDay,
+    URLs,
+    create_table_structure,
+    tables,
+)
 from europarl.elasticinterface import create_index, get_current_index
 from europarl.mptools import (
     EventMessage,
@@ -31,7 +38,7 @@ from europarl.workers import Indexer
 
 
 def main():
-    config = read_config()
+    config = configuration.read_config()
 
     with MainContext(config) as main_ctx:
 

@@ -4,6 +4,21 @@ from types import SimpleNamespace
 import psycopg2
 from psycopg2 import sql
 
+from europarl.db import tables
+
+
+def create_table_structure(config):
+
+    temp_db = DBInterface(config=config["General"])
+
+    for table in tables:
+        table_inst = table(temp_db)
+        if not table_inst.table_exists():
+            table_inst.create_table()
+        del table_inst
+
+    temp_db.close()
+
 
 class DBInterface:
     """

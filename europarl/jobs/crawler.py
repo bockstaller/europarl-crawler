@@ -14,8 +14,16 @@ from queue import Full
 import requests
 from dotenv import load_dotenv
 
-from europarl import rules
-from europarl.db import DBInterface, Documents, Rules, SessionDay, URLs, tables
+from europarl import configuration, rules
+from europarl.db import (
+    DBInterface,
+    Documents,
+    Rules,
+    SessionDay,
+    URLs,
+    create_table_structure,
+    tables,
+)
 from europarl.mptools import (
     EventMessage,
     MainContext,
@@ -36,13 +44,13 @@ from europarl.workers import (
 
 
 def main():
-    config = read_config()
+    config = configuration.read()
 
     with Context(config) as main_ctx:
 
         create_table_structure(main_ctx.config)
 
-        init_rules(main_ctx.config)
+        rules.init_rules(main_ctx.config)
 
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler
@@ -84,31 +92,6 @@ def main():
             event = main_ctx.event_queue.safe_get()
             if not event:
                 continue
-
-
-def read_config():
-    config = configparser.ConfigParser()
-    config.read("../settings.ini")
-    return config
-
-
-def create_table_structure(config):
-
-    temp_db = DBInterface(config=config["General"])
-
-    for table in tables:
-        table_inst = table(temp_db)
-        if not table_inst.table_exists():
-            table_inst.create_table()
-        del table_inst
-
-    temp_db.close()
-
-
-def init_rules(config):
-    temp_db = DBInterface(config=config["General"])
-    r = Rules(temp_db)
-    r.register_rules(rules.RULES)
 
 
 class Context(MainContext):

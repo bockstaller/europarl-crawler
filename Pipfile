@@ -12,6 +12,7 @@ recommonmark = "*"
 sphinxcontrib-napoleon = "*"
 black = "*"
 
+
 [packages]
 pre-commit = "*"
 requests = "*"
@@ -30,6 +31,8 @@ fake-useragent = "*"
 elasticsearch = "*"
 bs4 = "*"
 beautifultable = "*"
+"pdfminer.six" = "*"
+
 
 [scripts]
 test = "python -m pytest ."
