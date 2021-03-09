@@ -11,7 +11,7 @@ sphinx = "*"
 recommonmark = "*"
 sphinxcontrib-napoleon = "*"
 black = "*"
-
+pytest-xdist = "*"
 
 [packages]
 pre-commit = "*"
@@ -32,7 +32,6 @@ elasticsearch = "*"
 bs4 = "*"
 beautifultable = "*"
 "pdfminer.six" = "*"
-
 
 [scripts]
 test = "python -m pytest ."

@@ -1,6 +1,8 @@
 import configparser
 import copy
 import os
+import random
+import string
 
 import pytest
 from dotenv import load_dotenv
@@ -13,26 +15,39 @@ TESTDB_TEMPLATE = TESTDB + "_TEMPLATE"
 
 
 @pytest.fixture(scope="module")
-def config():
-
+def base_config():
     config = configparser.ConfigParser()
     config.read("settings.ini")
-    print(os.getcwd())
 
     # Bootstrap by using configured Testing credentials
     config["DEFAULT"] = copy.deepcopy(config["Test"])
     config["Temp"] = copy.deepcopy(config["Test"])
 
     # extend config in memory with temporary test only extensions
-
-    config["TestDB"] = {"DBName": TESTDB}
-    config["TestDB_Template"] = {"DBName": TESTDB_TEMPLATE}
+    config["TestDB"] = {"DBName": " "}
+    config["TestDB_Template"] = {"DBName": " "}
     config["DEFAULT"] = copy.deepcopy(config["TestDB"])
     return config
 
 
+@pytest.fixture
+def config(base_config, template_database_setup, db_interface):
+    config = base_config
+    config["TestDB"] = {"DBName": db_interface.name}
+    config["TestDB_Template"] = {"DBName": template_database_setup.name}
+    config["DEFAULT"] = copy.deepcopy(config["TestDB"])
+    return config
+
+
+def get_random_string(length):
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    result_str = "".join(random.choice(letters) for i in range(length))
+    return result_str
+
+
 @pytest.fixture(scope="module")
-def template_database_setup(request, config):
+def template_database_setup(request, base_config):
     """
     This test fixture manages the lifecycle of a template database
     containing empty tables of the application.
@@ -49,24 +64,27 @@ def template_database_setup(request, config):
 
     """
 
+    config = base_config
     temp_config = config["Temp"]
 
     temp_db = DBInterface(config=temp_config)
+
+    template_config = config["TestDB_Template"]
+    template_db_name = TESTDB_TEMPLATE + "_" + get_random_string(8)
+    template_config["DBName"] = template_db_name
 
     with temp_db.cursor() as db:
         db.con.autocommit = True
         db.cur.execute(
             SQL("drop database if exists {db_name};").format(
-                db_name=Identifier(TESTDB_TEMPLATE)
+                db_name=Identifier(template_db_name)
             )
         )
         db.cur.execute(
             SQL("create database {db_name};").format(
-                db_name=Identifier(TESTDB_TEMPLATE)
+                db_name=Identifier(template_db_name)
             )
         )
-
-    template_config = config["TestDB_Template"]
 
     template_db = DBInterface(config=template_config)
 
@@ -79,7 +97,7 @@ def template_database_setup(request, config):
         with temp_db.cursor() as db:
             db.cur.execute(
                 SQL("drop database {db_name};").format(
-                    db_name=Identifier(TESTDB_TEMPLATE)
+                    db_name=Identifier(template_db_name)
                 )
             )
 
@@ -90,7 +108,7 @@ def template_database_setup(request, config):
 
 
 @pytest.fixture
-def db_interface(request, config, template_database_setup):
+def db_interface(request, template_database_setup, base_config):
     """
     Creates a fresh database for every test by templating
     the template database from the tempalte_database_setup-fixture
@@ -106,14 +124,23 @@ def db_interface(request, config, template_database_setup):
 
     template_db = template_database_setup
 
+    config = base_config
+    template_db_name = template_db.name
+    config["TestDB_Template"]["DBName"] = template_db_name
+
+    db_name = TESTDB + "_" + get_random_string(8)
+    config["TestDB"]["DBName"] = db_name
+
     with template_db.cursor() as db:
         db.con.autocommit = True
         db.cur.execute(
-            SQL("drop database if exists {db_name};").format(db_name=Identifier(TESTDB))
+            SQL("drop database if exists {db_name};").format(
+                db_name=Identifier(db_name)
+            )
         )
         db.cur.execute(
             SQL("create database {db_name} with template {template};").format(
-                db_name=Identifier(TESTDB), template=Identifier(TESTDB_TEMPLATE)
+                db_name=Identifier(db_name), template=Identifier(template_db_name)
             )
         )
 
@@ -123,7 +150,7 @@ def db_interface(request, config, template_database_setup):
         db_connection.close()
         with template_db.cursor() as db:
             db.cur.execute(
-                SQL("drop database {db_name};").format(db_name=Identifier(TESTDB))
+                SQL("drop database {db_name};").format(db_name=Identifier(db_name))
             )
 
     request.addfinalizer(fin)
