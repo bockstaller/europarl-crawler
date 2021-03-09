@@ -10,14 +10,6 @@ from pdfminer.high_level import extract_text
 RULES = dict()
 BASE_URL = "https://europarl.europa.eu/doceo/document/"
 
-from europarl.db import DBInterface, Rules
-
-
-def init_rules(config):
-    temp_db = DBInterface(config=config["General"])
-    r = Rules(temp_db)
-    r.register_rules(RULES)
-
 
 def register_rule(cls):
     """Register a function as a rule"""

@@ -1,8 +1,16 @@
 from europarl import rules
 from europarl.db.sessionDay import SessionDay
 from europarl.db.url import URLs
+from europarl.rules import RULES
 
+from . import DBInterface
 from .tables import Table
+
+
+def init_rules(config):
+    temp_db = DBInterface(config=config["General"])
+    r = Rules(temp_db)
+    r.register_rules(RULES)
 
 
 class Rules(Table):
