@@ -128,7 +128,7 @@ class URLs(Table):
         with self.db.cursor() as db:
             db.cur.execute(
                 query,
-                [rules.SessionDayRule.name, limit],
+                [rules.protocol.SessionDayRule.__name__, limit],
             )
             result = db.cur.fetchall()
 

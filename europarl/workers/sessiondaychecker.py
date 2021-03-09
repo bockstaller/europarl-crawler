@@ -7,7 +7,7 @@ import requests
 
 from europarl.db import DBInterface, Request, Rules, SessionDay
 from europarl.mptools import QueueProcWorker
-from europarl.rules import SessionDayRule
+from europarl.rules.protocol import SessionDayRule
 
 
 class SessionDayChecker(QueueProcWorker):

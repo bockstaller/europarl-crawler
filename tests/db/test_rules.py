@@ -4,8 +4,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from psycopg2 import sql
 
-from europarl import rules
 from europarl.db import Rules
+from europarl.rules.rule import rule_registry
 
 
 def test_table_exists(db_interface):
@@ -25,7 +25,7 @@ def test_table_not_exists(db_interface):
     assert rules.table_exists() is False
 
 
-@pytest.mark.parametrize("rulenames", [rules.RULES])
+@pytest.mark.parametrize("rulenames", [rule_registry.all])
 def test_register_rule_and_get_by_name_id(db_interface, rulenames):
     rules = Rules(db_interface)
     registered_rules = []
@@ -61,6 +61,6 @@ def test_get_non_existent_rule(db_interface):
 
 def test_register_rule_multiple_times(db_interface):
     r = Rules(db_interface)
-    id_0 = r.register_rules(rules.RULES)
-    id_1 = r.register_rules(rules.RULES)
+    id_0 = r.register_rules(rule_registry.all)
+    id_1 = r.register_rules(rule_registry.all)
     assert id_0 == id_1

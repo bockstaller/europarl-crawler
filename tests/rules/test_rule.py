@@ -2,7 +2,8 @@ from datetime import date
 
 import pytest
 
-from europarl.rules import ProtocolEnHtmlRule, ProtocolEnPdfRule, get_term
+from europarl.rules.protocol import ProtocolEnHtmlRule, ProtocolEnPdfRule
+from europarl.rules.rule import get_term
 
 
 @pytest.mark.parametrize(

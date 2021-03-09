@@ -1,7 +1,7 @@
 from europarl import rules
 from europarl.db.sessionDay import SessionDay
 from europarl.db.url import URLs
-from europarl.rules import RULES
+from europarl.rules.rule import rule_registry
 
 from . import DBInterface
 from .tables import Table
@@ -10,7 +10,7 @@ from .tables import Table
 def init_rules(config):
     temp_db = DBInterface(config=config["General"])
     r = Rules(temp_db)
-    r.register_rules(RULES)
+    r.register_rules(rule_registry.all)
 
 
 class Rules(Table):
@@ -55,7 +55,7 @@ class Rules(Table):
         ids = []
 
         for rulename in rulenames:
-            rule = rules.RULES[rulename]
+            rule = rule_registry.all[rulename]
             language = rule.language
             filetype = rule.format
 
@@ -154,7 +154,7 @@ class Rules(Table):
 
         url_ids = []
         for rule_id, rulename in active_rules:
-            url = rules.RULES[rulename].url(date)
+            url = rule_registry.all[rulename].url(date)
             url_ids.append(u.save_url(date_id=date_id, rule_id=rule_id, url=url))
 
         return url_ids
@@ -166,7 +166,7 @@ class Rules(Table):
         s = SessionDay(self.db)
         date = s.get_date(id=date_id)[1]
 
-        url = rules.RULES[rulename].url(date)
+        url = rule_registry.all[rulename].url(date)
 
         u = URLs(self.db)
         url_id = u.save_url(date_id=date_id, rule_id=rule_id, url=url)

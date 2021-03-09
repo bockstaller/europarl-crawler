@@ -12,6 +12,7 @@ from elasticsearch import Elasticsearch
 from europarl import rules
 from europarl.db import DBInterface, Documents, Request, URLs
 from europarl.mptools import QueueProcWorker
+from europarl.rules.rule import rule_registry
 
 
 class PostProcessingWorker(QueueProcWorker):
@@ -39,7 +40,7 @@ class PostProcessingWorker(QueueProcWorker):
             metadata = self.docs.get_metadata(document["document"]["id"])
 
             document_data = None
-            document_data = rules.RULES[document["rule"]["name"]].extract_data(
+            document_data = rule_registry.all[document["rule"]["name"]].extract_data(
                 document["document"]["filepath"]
             )
 

@@ -4,8 +4,8 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 from psycopg2 import sql
 
-from europarl import rules
 from europarl.db import Request, Rules, SessionDay, URLs
+from europarl.rules.rule import rule_registry
 
 
 def test_table_exists(db_interface):
@@ -44,7 +44,7 @@ def rulesFix(db_interface):
     r = Rules(db_interface)
     ids = []
 
-    ids = r.register_rules(rules.RULES)
+    ids = r.register_rules(rule_registry.all)
     return ids
 
 
@@ -83,7 +83,7 @@ def todo_setup(db_interface):
     s = SessionDay(db_interface)
 
     day_id = s.insert_date(date.today())
-    rule_ids = ru.register_rules(rules.RULES)
+    rule_ids = ru.register_rules(rule_registry.all)
     session_url_id = u.save_url(
         date_id=day_id, rule_id=rule_ids[0], url="www.internet.de"
     )
@@ -110,7 +110,7 @@ def test_get_todo_rule_and_date_combos_one_rule(db_interface, todo_setup):
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 1
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == list(rules.RULES.keys())[1]
+    assert ret[0]["rulename"] == list(rule_registry.all.keys())[1]
 
 
 def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
@@ -124,9 +124,9 @@ def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 2
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == list(rules.RULES.keys())[1]
+    assert ret[0]["rulename"] == list(rule_registry.all.keys())[1]
     assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1]["rulename"] == list(rules.RULES.keys())[2]
+    assert ret[1]["rulename"] == list(rule_registry.all.keys())[2]
 
 
 def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
@@ -140,11 +140,11 @@ def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 3
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == list(rules.RULES.keys())[1]
+    assert ret[0]["rulename"] == list(rule_registry.all.keys())[1]
     assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1]["rulename"] == list(rules.RULES.keys())[2]
+    assert ret[1]["rulename"] == list(rule_registry.all.keys())[2]
     assert ret[2]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[2]["rulename"] == list(rules.RULES.keys())[3]
+    assert ret[2]["rulename"] == list(rule_registry.all.keys())[3]
 
 
 def count_urls(db_interface):
