@@ -22,7 +22,6 @@ def main():
 @click.pass_context
 def cli(ctx):
     config = configuration.read()
-    print(config)
     ctx.obj["config"] = config
 
     ctx.obj["db"] = DBInterface(config=config["General"])
