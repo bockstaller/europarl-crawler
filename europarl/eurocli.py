@@ -48,7 +48,7 @@ def crawler_start():
 crawler.add_command(crawler_start)
 
 
-@click.command()
+@click.command("rules")
 @click.option("--rule", "-r", help="Rule to change", multiple=True)
 @click.option("--activate/--deactivate", default=False)
 @click.pass_context
