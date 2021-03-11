@@ -31,6 +31,7 @@ class Indexer(ProcWorker):
 
         self.es = Elasticsearch(self.config["ESConnection"])
         self.indexname = self.config["ESIndexname"]
+        self.PREFETCH_LIMIT = int(self.config["PrefetchLimit"])
 
         self.db = DBInterface(config=self.config)
         self.db.connection_name = self.name
@@ -44,7 +45,7 @@ class Indexer(ProcWorker):
 
     def main_func(self):
         try:
-            documents = self.docs.get_unindexed_data(limit=10)
+            documents = self.docs.get_unindexed_data(limit=self.PREFETCH_LIMIT)
 
             if len(documents) > 0:
 
