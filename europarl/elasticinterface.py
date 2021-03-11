@@ -73,7 +73,7 @@ def create_index(es, indexname, mapping=None):
 
     if not es.indices.exists(index):
         if not mapping:
-            with open("./europarl_index.json", "r") as file:
+            with open("europarl/europarl_index.json", "r") as file:
                 mapping = json.load(file)
 
         es.indices.create(index=index, body=mapping)

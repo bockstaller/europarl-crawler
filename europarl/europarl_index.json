@@ -21,7 +21,7 @@
                 "type": "keyword"
             },
             "rulename": {
-                "type": "text"
+                "type": "keyword"
             },
             "session_date": {
                 "type": "date"

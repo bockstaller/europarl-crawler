@@ -41,6 +41,20 @@ class VotingOverviewDePdfRule(VotingOverviewRule):
     language = "DE"
 
 
+@rule_registry
+class VotingOverviewEnHtmlRule(VotingOverviewRule):
+    name = "voting_overview_en_html"
+    format = ".html"
+    language = "EN"
+
+
+@rule_registry
+class VotingOverviewDeHtmlRule(VotingOverviewRule):
+    name = "voting_overview_de_Html"
+    format = ".html"
+    language = "DE"
+
+
 class NamedVotingRule(Rule):
     @classmethod
     def url(cls, date):
@@ -75,6 +89,20 @@ class NamedVotingEnPdfRule(NamedVotingRule):
 
 @rule_registry
 class NamedVotingDePdfRule(NamedVotingRule):
-    name = "voting_overview_de_pdf"
+    name = "named_overview_de_pdf"
     format = ".pdf"
+    language = "DE"
+
+
+@rule_registry
+class NamedVotingEnHtmlRule(NamedVotingRule):
+    name = "named_voting_en_html"
+    format = ".html"
+    language = "EN"
+
+
+@rule_registry
+class NamedVotingDeHtmlRule(NamedVotingRule):
+    name = "named_overview_de_html"
+    format = ".html"
     language = "DE"

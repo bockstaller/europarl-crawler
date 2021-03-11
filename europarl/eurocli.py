@@ -26,8 +26,8 @@ def cli(ctx):
 
     ctx.obj["db"] = DBInterface(config=config["General"])
 
-    ctx.obj["index"] = config["General"].get("ESIndexname")
-    ctx.obj["es"] = Elasticsearch(config["General"].get("ESConnection"))
+    ctx.obj["index"] = config["Indexer"].get("ESIndexname")
+    ctx.obj["es"] = Elasticsearch(config["Indexer"].get("ESConnection"))
     pass
 
 

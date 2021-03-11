@@ -38,7 +38,7 @@ from europarl.workers import Indexer
 
 
 def main():
-    config = configuration.read_config()
+    config = configuration.read()
 
     with MainContext(config) as main_ctx:
 

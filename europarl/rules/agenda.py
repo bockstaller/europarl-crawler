@@ -78,7 +78,7 @@ class Agenda(Rule):
 
 @rule_registry
 class AgendaEnPdfRule(Agenda):
-    name = "daily_agenda_en_pdf"
+    name = "agenda_en_pdf"
     format = ".pdf"
     language = "EN"
 
