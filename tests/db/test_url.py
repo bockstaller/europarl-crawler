@@ -84,9 +84,12 @@ def todo_setup(db_interface):
 
     day_id = s.insert_date(date.today())
     rule_ids = ru.register_rules(rule_registry.all)
+    session_day_id, name, active = ru.get_rule(rulename="session_day")
     session_url_id = u.save_url(
-        date_id=day_id, rule_id=rule_ids[0], url="www.internet.de"
+        date_id=day_id, rule_id=session_day_id, url="www.internet.de"
     )
+    rule_ids.remove(session_url_id)
+
     r.mark_as_requested(
         url_id=session_url_id, status_code=200, redirected_url="www.internet1.de"
     )
@@ -110,7 +113,8 @@ def test_get_todo_rule_and_date_combos_one_rule(db_interface, todo_setup):
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 1
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == list(rule_registry.all.keys())[1]
+    id, name, active = ru.get_rule(todo_setup["rule_ids"][1])
+    assert ret[0]["rulename"] == name
 
 
 def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
@@ -124,9 +128,11 @@ def test_get_todo_rule_and_date_combos_two_rules(db_interface, todo_setup):
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 2
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == list(rule_registry.all.keys())[1]
+    id, name, active = ru.get_rule(todo_setup["rule_ids"][1])
+    assert ret[0]["rulename"] == name
     assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1]["rulename"] == list(rule_registry.all.keys())[2]
+    id, name, active = ru.get_rule(todo_setup["rule_ids"][2])
+    assert ret[1]["rulename"] == name
 
 
 def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
@@ -140,11 +146,14 @@ def test_get_todo_rule_and_date_combos_three_rules(db_interface, todo_setup):
     ret = u.get_todo_rule_and_date_combos(limit=100)
     assert len(ret) == 3
     assert ret[0]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[0]["rulename"] == list(rule_registry.all.keys())[1]
+    id, name, active = ru.get_rule(todo_setup["rule_ids"][1])
+    assert ret[0]["rulename"] == name
     assert ret[1]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[1]["rulename"] == list(rule_registry.all.keys())[2]
+    id, name, active = ru.get_rule(todo_setup["rule_ids"][2])
+    assert ret[1]["rulename"] == name
     assert ret[2]["date"] == s.get_date(todo_setup["day_id"])[1]
-    assert ret[2]["rulename"] == list(rule_registry.all.keys())[3]
+    id, name, active = ru.get_rule(todo_setup["rule_ids"][3])
+    assert ret[2]["rulename"] == name
 
 
 def count_urls(db_interface):

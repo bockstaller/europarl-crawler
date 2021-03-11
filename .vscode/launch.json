@@ -8,24 +8,24 @@
             "name": "Crawler",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/europarl/crawler.py",
-            "cwd": "${workspaceFolder}/europarl/",
+            "program": "${workspaceFolder}/europarl/jobs/crawler.py",
+            "cwd": "${workspaceFolder}/",
             "console": "integratedTerminal"
         },
         {
             "name": "Postprocessor",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/europarl/postprocessor.py",
-            "cwd": "${workspaceFolder}/europarl/",
+            "program": "${workspaceFolder}/europarl/jobs/postprocessor.py",
+            "cwd": "${workspaceFolder}/",
             "console": "integratedTerminal"
         },
         {
             "name": "Indexer",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/europarl/indexer.py",
-            "cwd": "${workspaceFolder}/europarl/",
+            "program": "${workspaceFolder}/europarl/jobs/indexer.py",
+            "cwd": "${workspaceFolder}/",
             "console": "integratedTerminal"
         },
     ]

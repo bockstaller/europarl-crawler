@@ -36,7 +36,7 @@ class SessionDay(Table):
         limit=10,
         offset=datetime.timedelta(days=30),
         start_date=datetime.date(1994, 1, 1),
-        sessiondayrulename="session_day",
+        sessiondayrulename="SessionDayRule",
     ):
         """
         Returns all dates not stored in the table which match the offset and start_date criteria.

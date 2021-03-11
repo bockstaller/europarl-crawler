@@ -14,7 +14,7 @@ from queue import Full
 import requests
 from elasticsearch import Elasticsearch, helpers
 
-from europarl import configuration, rules
+from europarl import configuration
 from europarl.db import (
     DBInterface,
     Documents,
@@ -33,6 +33,7 @@ from europarl.mptools import (
     default_signal_handler,
     init_signals,
 )
+from europarl.rules import rule
 from europarl.workers import PostProcessingScheduler, PostProcessingWorker
 
 
@@ -43,7 +44,9 @@ def main():
 
         create_table_structure(main_ctx.config)
 
-        rules.init_rules(main_ctx.config)
+        db = DBInterface(config=main_ctx.config["DEFAULT"])
+        Rules(db).register_rules(rule.rule_registry.all)
+        db.close()
 
         init_signals(
             main_ctx.shutdown_event, default_signal_handler, default_signal_handler

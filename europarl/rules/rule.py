@@ -10,10 +10,12 @@ def makeRuleRegistry():
     registry = {}
 
     def registrar(cls):
-        registry[cls.__name__] = cls
+        registry[cls.name] = cls
         return cls
 
     registrar.all = registry
+    registrar.keys = registry.keys()
+
     return registrar
 
 

@@ -74,4 +74,5 @@
         "-v"
     ],
     "python.testing.promptToConfigure": false,
+    "jupyter.jupyterServerType": "local",
 }

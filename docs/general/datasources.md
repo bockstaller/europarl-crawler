@@ -38,7 +38,7 @@ Alle URLs beginnen mit "https://www.europarl.europa.eu/doceo/document/"
 - [...]/OJ-{Wahlperiode}-{Datum erster Sitzungstag}-{Sprache}.pdf
 
 Tagesweise:
-- [...]/OJQ-{Wahlperiode}-{Datum Sitzungstag}-{Sprache}.html
+- [...]
 
 **Enthält Links auf:**
 - Geschäftsordnung
