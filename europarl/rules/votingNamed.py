@@ -2,11 +2,15 @@ from europarl.rules.extraction import filecontent, filesize
 from europarl.rules.rule import BASE_URL, Rule, get_term, rule_registry
 
 
-class Agenda(Rule):
+class NamedVotingRule(Rule):
+    """
+    Base Rule for the different vesions of named voting documents.
+    """
+
     @classmethod
     def url(cls, date):
         """
-        Creates agenda urls based upon the date, language and file format
+        Creates named voting urls based upon the date, language and file format
 
         Args:
             date (datetime.date): date to base the url of from
@@ -16,10 +20,12 @@ class Agenda(Rule):
         """
         document_url = (
             BASE_URL
-            + "OJ-"
+            + "PV-"
             + get_term(date)
             + "-"
             + date.strftime("%Y-%m-%d")
+            + "-"
+            + "RCV"
             + "_"
             + cls.language
             + cls.format
@@ -44,44 +50,44 @@ class Agenda(Rule):
 
 
 @rule_registry
-class AgendaEnPdfRule(Agenda):
+class NamedVotingEnPdfRule(NamedVotingRule):
     """
-    Manages agenda documents in English as PDF files
+    Manages named voting documents in English as PDF files
     """
 
-    name = "agenda_en_pdf"
+    name = "named_voting_en_pdf"
     format = ".pdf"
     language = "EN"
 
 
 @rule_registry
-class AgendaEnHtmlRule(Agenda):
+class NamedVotingDePdfRule(NamedVotingRule):
     """
-    Manages agenda documents in English as HTML files
-    """
-
-    name = "agenda_en_html"
-    format = ".html"
-    language = "EN"
-
-
-@rule_registry
-class AgendaDePdfRule(Agenda):
-    """
-    Manages agenda documents in German as PDF files
+    Manages named voting documents in German as PDF files
     """
 
-    name = "agenda_de_pdf"
+    name = "named_overview_de_pdf"
     format = ".pdf"
     language = "DE"
 
 
 @rule_registry
-class AgendaDeHtmlRule(Agenda):
+class NamedVotingEnHtmlRule(NamedVotingRule):
     """
-    Manages agenda documents in German as HTML files
+    Manages named voting documents in English as HTML files
     """
 
-    name = "agenda_de_html"
+    name = "named_voting_en_html"
+    format = ".html"
+    language = "EN"
+
+
+@rule_registry
+class NamedVotingDeHtmlRule(NamedVotingRule):
+    """
+    Manages named voting documents in German as HTML files
+    """
+
+    name = "named_overview_de_html"
     format = ".html"
     language = "DE"

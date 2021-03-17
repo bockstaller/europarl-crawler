@@ -1,10 +1,11 @@
 Welcome to europarl's documentation!
-====================================
+####################################
 
 .. toctree::
    :maxdepth: 2
 
    code/workers
+   code/rules
    code/database
    general/datasources
 
@@ -25,22 +26,23 @@ The main design-goals for this crawler are:
 
 
 Overview
---------
+********
 
 .. image:: images/overview.png
 
 
 .. include:: code/workers.rst
+.. include:: code/rules.rst
 .. include:: code/database.rst
 
 Reference Material
-------------------
+******************
 
 https://www.cloudcity.io/blog/2019/02/27/things-i-wish-they-told-me-about-multiprocessing-in-python/
 
 
 Indices and tables
-==================
+##################
 
 * :ref:`genindex`
 * :ref:`modindex`

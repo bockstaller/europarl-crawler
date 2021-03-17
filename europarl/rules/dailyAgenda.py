@@ -2,11 +2,15 @@ from europarl.rules.extraction import filecontent, filesize
 from europarl.rules.rule import BASE_URL, Rule, get_term, rule_registry
 
 
-class Agenda(Rule):
+class DailyAgenda(Rule):
+    """
+    Base Rule for the different vesions of daily agenda documents.
+    """
+
     @classmethod
     def url(cls, date):
         """
-        Creates agenda urls based upon the date, language and file format
+        Creates daily agenda urls based upon the date, language and file format
 
         Args:
             date (datetime.date): date to base the url of from
@@ -16,7 +20,7 @@ class Agenda(Rule):
         """
         document_url = (
             BASE_URL
-            + "OJ-"
+            + "OJQ-"
             + get_term(date)
             + "-"
             + date.strftime("%Y-%m-%d")
@@ -44,44 +48,44 @@ class Agenda(Rule):
 
 
 @rule_registry
-class AgendaEnPdfRule(Agenda):
+class DailyAgendaEnPdfRule(DailyAgenda):
     """
-    Manages agenda documents in English as PDF files
+    Manages Daily Agenda documents in English as PDF files
     """
 
-    name = "agenda_en_pdf"
+    name = "daily_agenda_en_pdf"
     format = ".pdf"
     language = "EN"
 
 
 @rule_registry
-class AgendaEnHtmlRule(Agenda):
+class DailyAgendaEnHtmlRule(DailyAgenda):
     """
-    Manages agenda documents in English as HTML files
+    Manages Daily Agenda documents in English as HTML files
     """
 
-    name = "agenda_en_html"
+    name = "daily_agenda_en_html"
     format = ".html"
     language = "EN"
 
 
 @rule_registry
-class AgendaDePdfRule(Agenda):
+class DailyAgendaDePdfRule(DailyAgenda):
     """
-    Manages agenda documents in German as PDF files
+    Manages Daily Agenda documents in German as PDF files
     """
 
-    name = "agenda_de_pdf"
+    name = "daily_agenda_de_pdf"
     format = ".pdf"
     language = "DE"
 
 
 @rule_registry
-class AgendaDeHtmlRule(Agenda):
+class DailyAgendaDeHtmlRule(DailyAgenda):
     """
-    Manages agenda documents in German as HTML files
+    Manages Daily Agenda documents in German as HTML files
     """
 
-    name = "agenda_de_html"
+    name = "daily_agenda_de_html"
     format = ".html"
     language = "DE"

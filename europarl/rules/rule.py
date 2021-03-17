@@ -6,7 +6,7 @@ from datetime import date
 BASE_URL = "https://europarl.europa.eu/doceo/document/"
 
 
-def makeRuleRegistry():
+def make_rule_registry():
     """
     Creates the rule registry that runs on import time
     and collects all rules marked with the @rule_registry
@@ -27,10 +27,10 @@ def makeRuleRegistry():
     return registrar
 
 
-rule_registry = makeRuleRegistry()
+rule_registry = make_rule_registry()
 
 
-def get_term(day) -> str:
+def get_term(day):
     """
     Matches the european parliaments election term to a given date.
     Necessary to generate a protocol-URL
@@ -69,8 +69,7 @@ class Rule(ABC):
     to implement the functions extract_data() and url()
 
     Raises:
-        NotImplementedError: If name, language, format, extract_data()
-        or url() are not set up
+        NotImplementedError: If name, language, format, extract_data() or url() are not set up
     """
 
     name = None
@@ -130,10 +129,10 @@ class Rule(ABC):
             date (datetime.date): Date to base the url of from
 
         Raises:
-            NotImplementedError: [description]
+            NotImplementedError: Function must be implemented
 
         Returns:
-            [type]: [description]
+            str: url as a string
         """
         raise NotImplementedError
         return ""
