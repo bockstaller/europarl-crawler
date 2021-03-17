@@ -32,6 +32,7 @@ elasticsearch = "*"
 bs4 = "*"
 beautifultable = "*"
 "pdfminer.six" = "*"
+pytest-rerunfailures = "*"
 
 [scripts]
 test = "python -m pytest ."

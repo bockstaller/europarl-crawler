@@ -417,6 +417,7 @@ class NeedTerminateWorker(ProcWorker):
             time.sleep(1.0)
 
 
+@pytest.mark.flaky(reruns=5)
 def test_proc_full_stop_need_terminate(caplog, mp_config):
     shutdown_evt = mp.Event()
     event_q = MPQueue()
@@ -433,6 +434,7 @@ def test_proc_full_stop_need_terminate(caplog, mp_config):
     proc.full_stop(wait_time=0.1)
 
 
+@pytest.mark.flaky(reruns=5)
 def test_main_context_stop_queues(config):
     with MainContext(config) as mctx:
         q1 = mctx.MPQueue()
@@ -459,6 +461,7 @@ def _test_stop_procs(cap_log, proc_name, worker_class, config):
     return mctx._stopped_procs_result, len(mctx.procs)
 
 
+@pytest.mark.flaky(reruns=5)
 def test_main_context_exception(config):
     with pytest.raises(ValueError):
         with MainContext(config):
@@ -471,6 +474,7 @@ class CleanProcWorker(ProcWorker):
         return
 
 
+@pytest.mark.flaky(reruns=5)
 def test_main_context_stop_procs_clean(caplog, config):
 
     (num_failed, num_terminated), num_still_running = _test_stop_procs(
@@ -489,6 +493,7 @@ class FailProcWorker(ProcWorker):
         raise ValueError("main func value error")
 
 
+@pytest.mark.flaky(reruns=5)
 def test_main_context_stop_procs_fail(caplog, config):
 
     caplog.set_level(logging.DEBUG)
@@ -532,6 +537,7 @@ def _test_main_context_hang(cap_log, is_hard, config):
         return _test_stop_procs(cap_log, "HANG_Soft", HangingProcWorker, config)
 
 
+@pytest.mark.flaky(reruns=5)
 def test_main_context_stop_procs_hung_hard(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_main_context_hang(
         caplog,
@@ -543,6 +549,7 @@ def test_main_context_stop_procs_hung_hard(caplog, config):
     assert num_still_running == 1
 
 
+@pytest.mark.flaky(reruns=5)
 def test_main_context_stop_procs_hung_soft(caplog, config):
     (num_failed, num_terminated), num_still_running = _test_main_context_hang(
         caplog,
