@@ -1,18 +1,16 @@
 
 Database
-^^^^^^^^
+========
 
 
 DB-Interface
-^^^^^^^^^^^^
+------------
 
 .. autoclass:: europarl.db.DBInterface
     :members:
-    :undoc-members:
-
 
 Tables
-""""""
+------
 
 .. autoclass:: europarl.db.Table
     :members:
@@ -20,7 +18,7 @@ Tables
 
 
 SessionDay
-""""""""""
+----------
 
 .. autoclass:: europarl.db.SessionDay
     :members:
@@ -28,18 +26,28 @@ SessionDay
 
 
 URLs
-""""
+----
 
 .. autoclass:: europarl.db.URLs
     :members:
     :undoc-members:
 
 Rules
-"""""
+-----
 
 .. autoclass:: europarl.db.Rules
     :members:
     :undoc-members:
 
+Documents
+---------
+
+.. autoclass:: europarl.db.Documents
+    :members:
 
 
+Requests
+--------
+
+.. autoclass:: europarl.db.Request
+    :members:

@@ -15,10 +15,9 @@ class SessionDay(Table):
     A job deriving all possible URLs from the date can then sort by the hit-property and create them.
 
     Attributes:
-        dates : date
-            the date of a possible session
-        hit : boolean
-            did HEAD-ing a generated result not return a 404
+        id (int): id of the datae
+        dates (datetime.date): the date of a possible session
+
 
     """
 
@@ -123,6 +122,15 @@ class SessionDay(Table):
             return data
 
     def insert_date(self, date):
+        """
+        Stores a new date in the table
+
+        Args:
+            date (datetime.date): date to store
+
+        Returns:
+            int: id of the inserted date
+        """
         query = """ INSERT INTO session_days(dates)
                     VALUES(%s)
                     ON CONFLICT (dates)
@@ -140,6 +148,15 @@ class SessionDay(Table):
         return value
 
     def get_date(self, id):
+        """
+        Returns the date associated with an id
+
+        Args:
+            id (int): id of the date
+
+        Returns:
+            datetime.date: stored date value
+        """
         query = """ SELECT id, dates
                     FROM session_days
                     WHERE id = %s"""

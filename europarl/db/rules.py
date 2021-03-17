@@ -15,11 +15,14 @@ def init_rules(config):
 
 class Rules(Table):
     """
-    Stores the rules for refernce
+    Stores the rules in the database, tracks their state and applies them to data.
 
     Attributes:
         id (int): id and primary key of the rule
         rulename(str): unique name of the rule
+        filetype(str): filetype of the document type the rule is designed for
+        language(str): language of the document type the rule is designed for
+        active(boolean): activation state of the rule
 
     """
 
@@ -68,7 +71,14 @@ class Rules(Table):
         return ids
 
     def get_rules(self):
-        query = """ SELECT *
+        """
+        Gets a list of all registered rules
+
+        Returns:
+            list of tuples: tuples contain the rule id, name, filetype, language and active-status
+        """
+
+        query = """ SELECT id, name, filetype, language, active
                     FROM rules
                     ORDER BY id;
         """
@@ -121,8 +131,17 @@ class Rules(Table):
             value = db.cur.fetchone()
         return value
 
-    # TODO: Test
     def update_rule_state(self, id, active=False):
+        """
+        Updates the rule activity-state
+
+        Args:
+            id (int): rule id
+            active (bool, optional): Active state of the rule. Defaults to False.
+
+        Returns:
+            int: id of the rule
+        """
         query = """ UPDATE rules
                     SET active=%s
                     WHERE id = %s
@@ -136,8 +155,17 @@ class Rules(Table):
             value = db.cur.fetchone()
         return value
 
-    # TODO: Test
     def apply_rules(self, date_id):
+        """
+        Generates all URLs for a given date id using the activated rules
+
+        Args:
+            date_id (int): reference to the session day table
+
+        Returns:
+            list of int: List of the generated urls ids
+        """
+
         query = """ SELECT id, rulename
                     FROM rules
                     WHERE active = True;
@@ -159,8 +187,18 @@ class Rules(Table):
 
         return url_ids
 
-    # TODO: Test
     def apply_rule(self, rule_id, date_id):
+        """
+        Apply one rule onto one date
+
+        Args:
+            rule_id (int): Id of the rule to apply
+            date_id (int): SessionDay Id of the date to apply the rule to
+
+        Returns:
+            tuple: Tuple made out of the url id and the url itself
+        """
+
         rule_id, rulename, active = self.get_rule(id=rule_id)
 
         s = SessionDay(self.db)

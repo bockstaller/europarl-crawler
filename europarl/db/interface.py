@@ -21,10 +21,7 @@ def create_table_structure(config):
 
 class DBInterface:
     """
-    Manages the db-connection.
-    - stores connection details
-    - tests the connection
-    - implements a custom context manager
+    Manages the db-connection by storing connection details, tests the connection and providing a custom context manager.
     """
 
     connection_name = "europarl-crawler"

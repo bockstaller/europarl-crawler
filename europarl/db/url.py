@@ -155,8 +155,16 @@ class URLs(Table):
         with self.db.cursor() as db:
             db.cur.execute(query)
 
-    def get_url(self, id=None):
-        # TODO: testing
+    def get_url(self, id):
+        """
+        Returns a URL identified by the id
+
+        Args:
+            id (int): URL database id
+
+        Returns:
+            dict: dictionary containing id, url and filetype
+        """
         query = """ SELECT  urls.id, urls.url, rules.filetype
                     FROM    public.urls
                     JOIN    rules

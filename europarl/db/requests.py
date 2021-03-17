@@ -7,6 +7,18 @@ from .tables import Table
 
 
 class Request(Table):
+    """
+    Database table to log the requests the application makes
+
+    Attributes:
+        id (int): id of the document
+        url_id (int): foreign key to the url table
+        document_id (int): foreign key to the document table
+        requested_at (datetime.datetime): timestamp of the request
+        status_code (integer): HTTP response code of the request
+        redirected_url (string): the URL the webserver redirected to
+
+    """
 
     schema = "public"
     table_name = "requests"
@@ -30,6 +42,15 @@ class Request(Table):
                             (requested_at DESC NULLS LAST)"""
 
     def get_request_log(self, id):
+        """
+        Return data associated to the request id
+
+        Args:
+            id (int): request id
+
+        Returns:
+            tuple: tuple containing the request id, related url id, related document id, request timestamp, status code and redirected-to url
+        """
         query = """ SELECT id, url_id, document_id, requested_at, status_code, redirected_url
                     FROM public.requests
                     WHERE id = %s
@@ -50,6 +71,19 @@ class Request(Table):
         document_id=None,
         requested_at=None,
     ):
+        """
+        Logs a request in the database
+
+        Args:
+            url_id (int): reference to the url used for the request
+            status_code (int): http status code
+            redirected_url (string): redirected-to url
+            document_id (integer, optional): Reference to the downloaded document. Defaults to None.
+            requested_at (datetime.datetime, optional): Timestamp of the request. Defaults to ```datetime.now(tz=timezone.utc)```.
+
+        Returns:
+            [type]: [description]
+        """
         if requested_at is None:
             requested_at = datetime.now(tz=timezone.utc)
 
@@ -67,6 +101,16 @@ class Request(Table):
         return value
 
     def get_status_code_summary(self, start_time, end_time):
+        """
+        Returns a counter which counts the occurences of the individuall status codes
+
+        Args:
+            start_time (datetime.datetime): start of the time interval to count status codes
+            end_time (datetime.datetime): end of the time interval to count the status codes
+
+        Returns:
+            collections.Counter: Counter object with all the status code occurences summed up
+        """
         query = """ SELECT status_code
                     FROM   public.requests
                     WHERE  requested_at >= %s AND requested_at <= %s;"""
