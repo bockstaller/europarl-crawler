@@ -38,8 +38,8 @@ Every URL get's marked as enqueued when it gets added to the queue to prevent en
     :members:
     :undoc-members:
 
-Crawlers
-""""""""
+Document Downloader
+"""""""""""""""""""
 
-Crawler Instances are responsible for downloading documents from the provided URLs, store them on the filesystem, identify links to other documents (if the downloaded document is a .html-file) and store the success in the URLs table.
-Found URLs are appended to the URLs table too.
+.. autoclass:: europarl.workers.DocumentDownloader
+    :members:

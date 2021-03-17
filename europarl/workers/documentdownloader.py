@@ -14,6 +14,9 @@ from europarl.mptools import QueueProcWorker
 
 
 class DocumentDownloader(QueueProcWorker):
+    """
+    Worker responsible for downloading documents
+    """
 
     DATAPATH = "../data/"
 
@@ -61,6 +64,14 @@ class DocumentDownloader(QueueProcWorker):
         super().shutdown()
 
     def main_func(self, token):
+        """
+        This method downloads documents.
+        It gets called whenever a new request token is provided by the throttling mechanism. It then tries to get a new URL from the url work queue. The token is returned if no work is available.
+        Otherwise a new session with a random user agent is generated, a download is triggered, a downloaded file is stored and the request logged.
+
+        Args:
+            token (str): Request throttling token that is provided by the token bucket
+        """
         # get url
         if not self.url_id:
             self.logger.debug("Getting new URL")

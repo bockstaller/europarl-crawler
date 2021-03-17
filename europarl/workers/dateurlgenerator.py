@@ -30,6 +30,15 @@ class DateUrlGenerator(ProcWorker):
         super().shutdown()
 
     def get_new_combos(self, limit):
+        """
+        Get a list of new rule and date combinations
+
+        Args:
+            limit (int): amount of combinations that should be retrieved
+
+        Returns:
+            list: list of combination dictionaries
+        """
         self.logger.debug("Getting new date/rule-combinations")
 
         combos = self.urls.get_todo_rule_and_date_combos(limit=limit)
@@ -45,7 +54,15 @@ class DateUrlGenerator(ProcWorker):
         return combos
 
     def create_url(self, combo):
+        """
+        Creates a url based upon a rule and date combination
 
+        Args:
+            combo (dict): rule and date combination dictionary
+
+        Returns:
+            tuple: url_id and url_string
+        """
         self.logger.debug(
             "Applying rule: {} to date: {}".format(combo["rulename"], combo["date"])
         )
@@ -56,6 +73,16 @@ class DateUrlGenerator(ProcWorker):
         return url_id, url_string
 
     def enqueue_url(self, url_id, url_string):
+        """
+        Queues up a URl
+
+        Args:
+            url_id (int): id of the url
+            url_string (id): url string
+
+        Returns:
+            tuple of url_id and url_string: values are None if the value was enqueued successfully, the old values stay if this isn't the case
+        """
         try:
             self.logger.debug("Queueing up URL with id: {}".format(url_id))
             self.url_q.put(url_id, timeout=self.DEFAULT_POLLING_TIMEOUT)
@@ -67,6 +94,11 @@ class DateUrlGenerator(ProcWorker):
         return url_id, url_string
 
     def main_func(self):
+        """
+        Continuously enqueue new urls.
+        First block sets up a buffer of date and rule combinations.
+        This buffer is then iteratively consumed with every iteration, urls created, stored and enqueued
+        """
 
         if len(self.todo_date_rule_combos) == 0:
             self.todo_date_rule_combos = self.get_new_combos(limit=self.PREFETCH_LIMIT)
