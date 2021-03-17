@@ -7,6 +7,14 @@ BASE_URL = "https://europarl.europa.eu/doceo/document/"
 
 
 def makeRuleRegistry():
+    """
+    Creates the rule registry that runs on import time
+    and collects all rules marked with the @rule_registry
+    decorator
+
+    Returns:
+        function: Function to register a new rule
+    """
     registry = {}
 
     def registrar(cls):
@@ -53,13 +61,79 @@ def get_term(day) -> str:
 
 
 class Rule(ABC):
+    """
+    Abstract base class for the rules.
+
+    A derived class has to provide the attributes
+    name, language, and format with values and has
+    to implement the functions extract_data() and url()
+
+    Raises:
+        NotImplementedError: If name, language, format, extract_data()
+        or url() are not set up
+    """
+
+    name = None
     language = None
     format = None
 
+    def __init__(self):
+        if self.name is None:
+            raise NotImplementedError(
+                "Rule {} has no name attribute".format(self.__class__.__name__)
+            )
+        if self.language is None:
+            raise NotImplementedError(
+                "Rule {} has no language attribute".format(self.__class__.__name__)
+            )
+        if self.format is None:
+            raise NotImplementedError(
+                "Rule {} has no format attribute".format(self.__class__.__name__)
+            )
+
     @classmethod
     def extract_data(cls, filepath):
+        """
+        Not implemented data extraction function.
+        All extracted data get's appended to a common dictionary and must
+        be returned. Failures should be logged and failed data should be set to None.
+        It might be necessary to namespace the dictionary keys to
+        avoid overwriting information.
+
+        The test tests.rules.test_rule.test_rule_extract_data_implemented(rule)
+        checks that all registred rules return a dictionary when this function
+        is called.
+
+        Args:
+            filepath (str): Path to the file to extract data from
+
+        Raises:
+            NotImplementedError: Function must be implemented
+
+        Returns:
+            dict: dict of all extracted data
+        """
         raise NotImplementedError
+        return {}
 
     @classmethod
     def url(cls, date):
+        """
+        Not implemented url generation function.
+        Must generate a url as a string from a passed in datetime.date objection.
+
+        The test tests.rules.test_rule.test_rule_url_implemented(rule)
+        checks that all registred rules return a dictionary when this function
+        is called.
+
+        Args:
+            date (datetime.date): Date to base the url of from
+
+        Raises:
+            NotImplementedError: [description]
+
+        Returns:
+            [type]: [description]
+        """
         raise NotImplementedError
+        return ""

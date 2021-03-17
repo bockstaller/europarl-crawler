@@ -7,7 +7,12 @@ from pdfminer.high_level import extract_text
 
 
 def filesize(filepath):
-    return {"filesize": os.path.getsize(filepath)}
+    try:
+        res = os.path.getsize(filepath)
+    except Exception as e:
+        logging.error(e)
+        res = None
+    return {"filesize": res}
 
 
 def filecontent(filepath, format):
