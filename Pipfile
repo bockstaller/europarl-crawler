@@ -33,11 +33,14 @@ bs4 = "*"
 beautifultable = "*"
 "pdfminer.six" = "*"
 pytest-rerunfailures = "*"
+europarl = {editable = true, path = "."}
 
 [scripts]
 test = "python -m pytest ."
-report = "coverage html"
-main = "python ./src/main.py"
+docs_html = "make -C ./docs html"
+docs_pdf = "make -C ./docs latexpdf"
+env_up = "docker-compose up -d"
+env_down = "docker-compose down"
 
 [requires]
 python_version = "3.9"
