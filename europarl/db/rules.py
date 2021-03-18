@@ -78,7 +78,7 @@ class Rules(Table):
             list of tuples: tuples contain the rule id, name, filetype, language and active-status
         """
 
-        query = """ SELECT id, name, filetype, language, active
+        query = """ SELECT id, rulename, filetype, language, active
                     FROM rules
                     ORDER BY id;
         """
