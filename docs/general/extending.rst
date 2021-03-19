@@ -11,13 +11,13 @@ Adding or extending existing rules
 A rule has the task to generate crawlable URLs and extract as much data as possible from a retrieved document.
 
 The module europarl.rules implement an abstract base class Rule, which defines the minimal interface necessary.
-A rule-class has to provide a unique name, a language, and file format as attributes while implementing a URL(date) and extract_data(file path) class method.
-They have to be decorated with the @rule_registry decorator from the same module, to be registered during application startup. All rules are identified by their name and are not active by default.
+A rule-class has to provide a unique name, a language, and file format as attributes while implementing a ``URL(date)`` and ``extract_data(file path)`` class method.
+They have to be decorated with the ``@rule_registry`` decorator from the same module, to be registered during application startup. All rules are identified by their name and are not active by default.
 
-The function URL(date) must return a valid URL as a string when called with a DateTime.date parameter. The function extract_data(file path) must return a dictionary containing all extracted data when called. Dictionary keys and values will be used directly in Elasticsearch. Examples implementing the two methods are provided in the europarl.rules module.
-These properties are tested by tests in tests.rules.test_rule.
+The function ``URL(date)`` must return a valid URL as a string when called with a ``DateTime.date`` parameter. The function ``extract_data(file path)`` must return a dictionary containing all extracted data when called. Dictionary keys and values will be used directly in Elasticsearch. Examples implementing the two methods are provided in the ``europarl.rules`` module.
+These properties are tested by tests in ``tests.rules.test_rule``.
 
-Adding new attributes to the extract_data dictionary will make changes to the Elasticsearch mapping necessary. Update the europarl_index.json as needed and use the cli's reindex command to transfer existing data to a new and updated index.
+Adding new attributes to the extract_data dictionary will make changes to the Elasticsearch mapping necessary. Update the ``europarl_index.json`` as needed and use the cli's reindex command to transfer existing data to a new and updated index.
 
 Adding new workers
 ------------------
