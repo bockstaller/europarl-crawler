@@ -34,6 +34,7 @@ beautifultable = "*"
 "pdfminer.six" = "*"
 pytest-rerunfailures = "*"
 europarl = {editable = true, path = "."}
+sphinx-autobuild = "*"
 
 [scripts]
 test = "python -m pytest ."

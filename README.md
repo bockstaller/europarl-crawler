@@ -7,7 +7,7 @@ It is part of an advanced software practical supervised by Prof. Dr. Michael Ger
 The European Union publishes documents continuously, which record the daily business of the Union. One source for these documents is the European Parliament which publishes all of its documents here https://www.europarl.europa.eu/plenary/en/home.html. The website has a search functionality but doesn't publish all documents centrally to download them.
 
 ## Tasks
-The main tasks for this document practical are:
+The main tasks for this practical are:
 
 Develop document data and metadata model
 Implement the models in Elasticsearch
@@ -42,9 +42,9 @@ This repository makes setting up a dev environment easy by providing a Docker Co
 
 8. Build the documentation by running `pipenv run docs_html` or `pipenv run docs_pdf`. The resulting documentation is stored in `./docs/_build/...`. For PDF a local `pdfTex` installation is necessary.
 
-8. Install Git hooks. They help you to execute tasks before your code is committed (see [Working with Git](#working-with-git)). Learn more about pre-commit in the [official docs](https://pre-commit.com/). ([Installation](https://pre-commit.com/#installation) and [Activation](https://pre-commit.com/#3-install-the-git-hook-scripts) are described here) In our case they are used to make sure that the application code is well formatted using [black](https://github.com/psf/black)/[autopep8](https://github.com/hhatto/autopep8), has no syntax errors using [flake8](https://gitlab.com/pycqa/flake8) and that the dependency imports are well sorted using [isort](https://github.com/PyCQA/isort). The pre-commit instructions are given by the `.pre-commit-config.yaml`. Any isort specific settings are given by the `.isort.cfg` file.
+9. Install Git hooks. [Installation](https://pre-commit.com/#installation) and [Activation](https://pre-commit.com/#3-install-the-git-hook-scripts) are described here.
 
-9.  Use the CLI to run the crawler. Use `eurocli --help` to get guidance.
+10. Use the CLI to run the crawler. Use `eurocli --help` to get guidance.
 
 **Note:** To deactivate the environment again, run `pipenv run env_down` to tear down the elasticsearch and postgres services. An d run `deactivate` to leave the Python virtual environment.
 
@@ -229,6 +229,9 @@ ExecStart=[...]/python3.9 eurocli indexing start
 [Install]
 WantedBy=multi-user.target
 ```
+
+#### Kibana
+Load the export.ndjson file into Kibana to create the necessary objects for the dashboard.
 
 ### Operations
 

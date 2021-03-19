@@ -36,7 +36,6 @@
             "source.organizeImports": true
         }
     },
-    "restructuredtext.confPath": "${workspaceFolder}/source",
     "python.terminal.activateEnvInCurrentTerminal": true,
     "autoDocstring.startOnNewLine": true,
     "cSpell.enableFiletypes": [
@@ -75,4 +74,5 @@
     ],
     "python.testing.promptToConfigure": false,
     "jupyter.jupyterServerType": "local",
+    "restructuredtext.confPath": "${workspaceFolder}/docs",
 }
