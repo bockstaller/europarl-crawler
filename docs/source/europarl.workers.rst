@@ -57,10 +57,3 @@ europarl.workers.tokenbucket module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: europarl.workers
-   :members:
-   :undoc-members:
-   :show-inheritance:

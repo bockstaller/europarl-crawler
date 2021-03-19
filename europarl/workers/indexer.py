@@ -44,6 +44,14 @@ class Indexer(ProcWorker):
         super().shutdown()
 
     def main_func(self):
+        """
+        Get's unindexed documents from the database and indexes them in elasticsearch.
+
+        This function deletes documents from the index if they are already indexed and reindexes them. This avoids creating multiple versions of a document in the index.
+        Left over documents can be caused by an unsuccessfull postprocessing reset or timeouts caused by elasticsearch.
+
+        """
+
         try:
             documents = self.docs.get_unindexed_data(limit=self.PREFETCH_LIMIT)
 

@@ -27,6 +27,9 @@ class PostProcessingScheduler(ProcWorker):
         super().shutdown()
 
     def main_func(self):
+        """
+        This function requests a number of unpostprocessed documents from the database and enqueues them into the postprocessing queue.
+        """
 
         if len(self.todo_documents) == 0:
             self.logger.debug("Requesting new documents")

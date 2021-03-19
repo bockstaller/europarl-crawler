@@ -3,6 +3,8 @@
 This crawler crawls the website of the European Unions Parliament and stores the results in Elasticsearch.
 It is part of an advanced software practical supervised by Prof. Dr. Michael Gertz.
 
+The complete documentation is hosted on https://europarl-crawler.readthedocs.io/en/latest/
+
 ## Introduction
 The European Union publishes documents continuously, which record the daily business of the Union. One source for these documents is the European Parliament which publishes all of its documents here https://www.europarl.europa.eu/plenary/en/home.html. The website has a search functionality but doesn't publish all documents centrally to download them.
 

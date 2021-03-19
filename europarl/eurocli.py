@@ -15,12 +15,19 @@ from europarl.elasticinterface import create_index, get_current_index, index_doc
 
 
 def main():
+    """
+    CLI wrapper.
+    Creates only the context object
+    """
     return cli(obj={})
 
 
 @click.group()
 @click.pass_context
 def cli(ctx):
+    """
+    CLI entrypoint. Loads the configuration and establishes db and elasticsearch connections
+    """
     config = configuration.read()
     ctx.obj["config"] = config
 
@@ -41,6 +48,10 @@ cli.add_command(crawler)
 
 @click.command(name="start")
 def crawler_start():
+    """
+    Function for ``eurocli crawler start``.
+    Calls the main of the crawler job.
+    """
     click.echo("Starting crawler")
     ep_crawler.main()
 
@@ -53,6 +64,14 @@ crawler.add_command(crawler_start)
 @click.option("--activate/--deactivate", default=False)
 @click.pass_context
 def rules_function(ctx, rule, activate):
+    """
+    Function for ``eurocli rules [...]``
+
+    Args:
+        ctx (context): context object
+        rule (int): id('s) of the rule to modify
+        activate (boolean): target state of the rule
+    """
     r = Rules(ctx.obj["db"])
 
     if rule:
@@ -85,6 +104,10 @@ cli.add_command(postprocessing)
 
 @click.command("start")
 def postprocessing_start():
+    """
+    Function for ``eurocli postprocessing start``.
+    Calls the main of the postprocessing job.
+    """
     click.echo("Starting postprocessing")
     ep_postprocessor.main()
 
@@ -96,6 +119,14 @@ def postprocessing_start():
 @click.option("-f", "--force", is_flag=True)
 @click.pass_context
 def postprocessing_reset(ctx, rule, force):
+    """
+    Function for ``eurocli postprocessing reset [...]``
+
+    Args:
+        ctx (context): context object
+        rule (int): id('s) of the rule which documents should be reset
+        force (boolean): unindexing failures are ignored if true
+    """
     click.echo("Resetting postprocessing results")
 
     d = Documents(ctx.obj["db"])
@@ -146,6 +177,10 @@ cli.add_command(indexing)
 
 @click.command(name="start")
 def indexing_start():
+    """
+    Function for ``eurocli indexing start``.
+    Calls the main of the indexing job.
+    """
     click.echo("Starting indexing")
     ep_indexer.main()
 
@@ -153,6 +188,10 @@ def indexing_start():
 @click.command(name="unindex")
 @click.pass_context
 def indexing_unindex(ctx):
+    """
+    Function for ``eurocli indexing unindex``
+    Unindexes all documents which are marked for unindexing
+    """
     d = Documents(ctx.obj["db"])
 
     click.echo("Unindexing stale documents")
@@ -176,6 +215,15 @@ def indexing_unindex(ctx):
 @click.argument("mapping")
 @click.pass_context
 def indexing_reindex(ctx, mapping):
+    """
+    Function for ``eurocli indexing reindex [...]``
+    Creates a new mapping from the passed .json file and starts a reindexing background job
+
+    Args:
+        ctx (context): context object
+        mapping (str): path to a mapping.json
+    """
+
     click.echo("Reindexing")
     with open(mapping, "r") as file:
         mapping = json.load(file)

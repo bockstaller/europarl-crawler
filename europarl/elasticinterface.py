@@ -5,6 +5,17 @@ from elasticsearch import Elasticsearch, helpers
 
 
 def get_actions(documents, indexname, op_type):
+    """
+    Generator for yielding action objects that do not require object data, which can be used by elasticsearchs bulk methods.
+
+    Args:
+        documents (list): list of document data tuples from the database
+        indexname (str): index on which the action should be used
+        op_type (str): operation name
+
+    Yields:
+        dict: elasticsearch bulk action dictionary
+    """
     for row in documents:
         value = {
             "_id": row[0],
@@ -15,6 +26,17 @@ def get_actions(documents, indexname, op_type):
 
 
 def get_actions_data(documents, indexname, op_type):
+    """
+    Generator for yielding action objects that do require object data, which can be used by elasticsearchs bulk methods.
+
+    Args:
+        documents (list): list of document data tuples from the database
+        indexname (str): index on which the action should be used
+        op_type (str): operation name
+
+    Yields:
+        dict: elasticsearch bulk action dictionary
+    """
     for row in documents:
 
         value = {
@@ -26,17 +48,23 @@ def get_actions_data(documents, indexname, op_type):
         yield (value)
 
 
-def index_documents(es, docs, action, indexname, documents, silent=False):
-    return manage_documents(es, docs, action, indexname, documents, get_actions, silent)
-
-
-def index_documents_data(es, docs, action, indexname, documents, silent=False):
-    return manage_documents(
-        es, docs, action, indexname, documents, get_actions_data, silent
-    )
-
-
 def manage_documents(es, docs, action, indexname, documents, function, silent=False):
+    """
+    Interface function to interact with an elasticsearch index.
+    Gets the current active index, initiates the desired operations in bulk,
+    and returns a list of successfull operations.
+
+    Args:
+        es: elasticsearch instance
+        action (str): desired operation
+        indexname (str): configured indexname
+        documents (list): list of documents
+        function (generator): generator function used to generate the actions
+        silent (bool, optional): Should errors be ignored. Defaults to False.
+
+    Returns:
+        list(int): list of successfull document ids
+    """
     index = get_current_index(es, indexname)
 
     bulk_result = helpers.streaming_bulk(
@@ -63,7 +91,34 @@ def manage_documents(es, docs, action, indexname, documents, function, silent=Fa
     return successfull_ids
 
 
+def index_documents(es, docs, action, indexname, documents, silent=False):
+    """
+    Wrapper for manage documents, preselecting ``get_actions(...)``
+    """
+    return manage_documents(es, docs, action, indexname, documents, get_actions, silent)
+
+
+def index_documents_data(es, docs, action, indexname, documents, silent=False):
+    """
+    Wrapper for manage documents, preselecting ``get_actions_data(...)``
+    """
+    return manage_documents(
+        es, docs, action, indexname, documents, get_actions_data, silent
+    )
+
+
 def create_index(es, indexname, mapping=None):
+    """
+    Create a index based upon the configured base indexname. It will increment an appendend 5 digit number to version the different index instances.
+
+    Args:
+        es : elasticsearch instance
+        indexname (str): configured base indexname
+        mapping (dict, optional): Dict with the index mapping. Defaults to the content of europarl/europarl_index.json.
+
+    Returns:
+        str: complete index name
+    """
     current_index = get_current_index(es, indexname)
     if not current_index:
         index = indexname + "-" + "00000"
@@ -82,6 +137,16 @@ def create_index(es, indexname, mapping=None):
 
 
 def get_current_index(es, indexname):
+    """
+    Return the current complete index name base upon the configured base index name.
+
+    Args:
+        es: elasticsearch instance
+        indexname (str): base index name
+
+    Returns:
+        str: complete index name
+    """
     indices = es.indices.resolve_index(indexname + "*")["indices"]
     index_names = [index["name"] for index in indices]
 

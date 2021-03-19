@@ -19,6 +19,8 @@ Submodules
 europarl.configuration module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This module is responsible for loading the configuration files.
+
 .. automodule:: europarl.configuration
    :members:
    :undoc-members:
@@ -26,6 +28,8 @@ europarl.configuration module
 
 europarl.elasticinterface module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This module contains the functions used to interact with elasticsearch.
 
 .. automodule:: europarl.elasticinterface
    :members:
@@ -35,9 +39,23 @@ europarl.elasticinterface module
 europarl.eurocli module
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: europarl.eurocli
-   :members:
-   :undoc-members:
-   :show-inheritance:
+This module uses the click package to implement the command line interface used for managing the crawler.
 
+.. autofunction:: europarl.eurocli.main
+
+.. autofunction:: europarl.eurocli.cli
+
+.. autofunction:: europarl.eurocli.crawler_start
+
+.. autofunction:: europarl.eurocli.rules_function
+
+.. autofunction:: europarl.eurocli.postprocessing_start
+
+.. autofunction:: europarl.eurocli.postprocessing_reset
+
+.. autofunction:: europarl.eurocli.indexing_start
+
+.. autofunction:: europarl.eurocli.indexing_unindex
+
+.. autofunction:: europarl.eurocli.indexing_reindex
 

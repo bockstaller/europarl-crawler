@@ -35,7 +35,12 @@ class PostProcessingWorker(QueueProcWorker):
         super().shutdown()
 
     def main_func(self, document):
+        """
+        Applies the data extraction rules onto the passed in document.
 
+        Args:
+            document (dict): combination dict containing information about the rule and the document.
+        """
         try:
             metadata = self.docs.get_metadata(document["document"]["id"])
 
@@ -45,6 +50,8 @@ class PostProcessingWorker(QueueProcWorker):
             )
 
             data = {**metadata, **document_data}
+
+            self.logger.debug("Extracted the following information {}".format(data))
 
             self.docs.set_data(document["document"]["id"], data)
 
