@@ -35,8 +35,13 @@ def main():
 @click.pass_context
 def cli(ctx):
     """
-    CLI entrypoint. Loads the configuration and establishes db and elasticsearch connections
+    CLI entrypoint.
     """
+    pass
+
+
+def load_config(ctx):
+    "Loads the configuration and establishes db and elasticsearch connections"
     config = configuration.read()
     ctx.obj["config"] = config
 
@@ -48,7 +53,9 @@ def cli(ctx):
 
 
 @click.group()
-def crawler():
+@click.pass_context
+def crawler(ctx):
+    load_config(ctx)
     pass
 
 
@@ -105,6 +112,7 @@ cli.add_command(rules_function)
 @click.group()
 @click.pass_context
 def postprocessing(ctx):
+    load_config(ctx)
     pass
 
 
@@ -178,6 +186,7 @@ postprocessing.add_command(postprocessing_start)
 @click.group()
 @click.pass_context
 def indexing(ctx):
+    load_config(ctx)
     pass
 
 
@@ -260,8 +269,7 @@ indexing.add_command(indexing_reindex)
 
 
 @click.group()
-@click.pass_context
-def download(ctx):
+def download():
     pass
 
 

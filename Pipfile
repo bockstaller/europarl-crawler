@@ -12,6 +12,7 @@ recommonmark = "*"
 sphinxcontrib-napoleon = "*"
 black = "*"
 pytest-xdist = "*"
+europarl = {editable = true, path = "."}
 
 [packages]
 pre-commit = "*"
@@ -33,7 +34,6 @@ bs4 = "*"
 beautifultable = "*"
 "pdfminer.six" = "*"
 pytest-rerunfailures = "*"
-europarl = {editable = true, path = "."}
 sphinx-autobuild = "*"
 click-log = "*"
 lxml = "*"

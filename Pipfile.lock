@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "914d585cd541c1a7bd5a322308e2932b3e718cc483e304e1897b5c625b957b83"
+            "sha256": "c19500f03d69d561db673b1b2f8a48c35da568b635b2b41e370c56c16854aeba"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -265,10 +265,6 @@
             ],
             "index": "pypi",
             "version": "==7.12.1"
-        },
-        "europarl": {
-            "editable": true,
-            "path": "."
         },
         "fake-headers": {
             "hashes": [
@@ -1045,6 +1041,10 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
             "version": "==0.16"
+        },
+        "europarl": {
+            "editable": true,
+            "path": "."
         },
         "execnet": {
             "hashes": [

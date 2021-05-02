@@ -1,0 +1,33 @@
+name: "Europarliament Session Protocol Crawler"
+description: "Crawles the website of the European Parliament to find all session related documents"
+author: "Lukas Bockstaller"
+inputs:
+  document-type:
+    description: "Document Type to download"
+    default: "sessions"
+    required: true
+  directory:
+    description: "Document Type to download"
+    default: "."
+    required: true
+  backfill:
+    description: "Should data be backfilled by adding dates in the past?"
+    default: " "
+    required: true
+  rules:
+    description: "Rules to download"
+    default: '-r "session_day" '
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
+  args:
+    - "eurocli"
+    - "download"
+    - ${{inputs.document-type}}
+    - ${{inputs.directory}}
+    - ${{inputs.backfill}}
+    - ${{inputs.rules}}
+    - "-v"
+    - DEBUG

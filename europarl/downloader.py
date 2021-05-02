@@ -67,7 +67,7 @@ def scrape_document(basedir, rule, date, session, retry=3, sleep=3):
                 break
             else:
                 time.sleep(sleep)
-        except TimeoutError:
+        except requests.exceptions.ReadTimeout:
             time.sleep(sleep)
 
     if rule.format == ".html":

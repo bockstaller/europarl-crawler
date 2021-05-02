@@ -1,0 +1,14 @@
+name: Integration Test
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Smoke test
+        id: smoke_test
+        uses: bockstaller/europarl-crawler@main
+        with:
+          document-type: "sessions"
+          directory: "."
+          backfill: "--backfill"
+          rules: "-r protocol_en_html"
