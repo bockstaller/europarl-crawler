@@ -1,8 +1,13 @@
 #!/usr/bin/python3.9
 
+import datetime
 import json
+import logging
+import traceback
 
 import click
+import click_log
+import requests
 from beautifultable import BeautifulTable
 from elasticsearch import Elasticsearch, helpers
 
@@ -11,7 +16,11 @@ import europarl.jobs.indexer as ep_indexer
 import europarl.jobs.postprocessor as ep_postprocessor
 from europarl import configuration, rules
 from europarl.db import DBInterface, Documents, Rules, create_table_structure
+from europarl.downloader import download_all_docs, spaced_out_dates
 from europarl.elasticinterface import create_index, get_current_index, index_documents
+
+logger = logging.getLogger("eurocli")
+click_log.basic_config("eurocli")
 
 
 def main():
@@ -248,6 +257,94 @@ def indexing_reindex(ctx, mapping):
 indexing.add_command(indexing_start)
 indexing.add_command(indexing_unindex)
 indexing.add_command(indexing_reindex)
+
+
+@click.group()
+@click.pass_context
+def download(ctx):
+    pass
+
+
+cli.add_command(download)
+
+
+@click.command("sessions")
+@click_log.simple_verbosity_option(logger)
+@click.option(
+    "--rule",
+    "-r",
+    help="Select session documents to download. Use rulenames",
+    multiple=True,
+)
+@click.option(
+    "-b",
+    "--backfill",
+    is_flag=True,
+    help="Backfill older documents using an exponential backoff.",
+)
+@click.argument(
+    "directory",
+)
+@click.option("--retry", default=3, help="Number of retries per document")
+@click.option("--sleep", default=3, help="Wait time between document downloads")
+@click.option("-d", "--date", help="Date to download documents for")
+def download_sessions(rule, backfill, date, retry, sleep, directory):
+    if not date:
+
+        date = datetime.date.today()
+        logger.info(
+            "No date provided. Using today: {}".format(date.strftime("%Y-%m-%d"))
+        )
+
+    if backfill:
+        dates = spaced_out_dates(date)
+    else:
+        dates = [date]
+
+    logger.info(
+        "Crawling the following dates {}".format(
+            [date.strftime("%Y-%m-%d") for date in dates]
+        )
+    )
+
+    rulelist = [r.strip() for r in rule]
+
+    logger.info("Using the following rules: {}".format(rulelist))
+
+    for date in dates:
+        try:
+            download_all_docs(
+                basedir=directory,
+                rulenames=rulelist,
+                date=date,
+                retry=retry,
+                sleep=sleep,
+            )
+
+        except Exception as e:
+            logger.error(e, exc_info=True)
+
+
+download.add_command(download_sessions)
+
+
+@click.command("texts")
+@click.option(
+    "--rule",
+    "-r",
+    help="Select text rules to download.  Use rulenames",
+    multiple=True,
+)
+@click.option("--dir")
+@click.option("--min", default=1)
+@click.option("--max", default=500)
+@click.pass_context
+def download_texts(ctx, dir, rule, min, max):
+    return
+
+
+download.add_command(download_texts)
+
 
 if __name__ == "__main__":
     cli(obj={})

@@ -35,6 +35,8 @@ beautifultable = "*"
 pytest-rerunfailures = "*"
 europarl = {editable = true, path = "."}
 sphinx-autobuild = "*"
+click-log = "*"
+lxml = "*"
 
 [scripts]
 test = "python -m pytest ."

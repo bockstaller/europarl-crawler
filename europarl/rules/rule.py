@@ -2,6 +2,7 @@ import logging
 import os
 from abc import ABC
 from datetime import date
+from pathlib import Path
 
 BASE_URL = "https://europarl.europa.eu/doceo/document/"
 
@@ -72,9 +73,13 @@ class Rule(ABC):
         NotImplementedError: If name, language, format, extract_data() or url() are not set up
     """
 
+    SESSION_DOC = "session_document"
+    TEXT_DOC = "text_document"
+
     name = None
     language = None
     format = None
+    document_type = SESSION_DOC
 
     def __init__(self):
         if self.name is None:
@@ -89,6 +94,23 @@ class Rule(ABC):
             raise NotImplementedError(
                 "Rule {} has no format attribute".format(self.__class__.__name__)
             )
+
+    @classmethod
+    def store_document(cls, basedir, date, html):
+        dirpath = cls.get_filepath(basedir, date)
+        dirpath.mkdir(parents=True, exist_ok=True)
+        filepath = dirpath.joinpath(cls.get_filename())
+        with filepath.open(mode="w") as f:
+            f.write(html)
+        return filepath
+
+    @classmethod
+    def get_filepath(cls, basedir, date):
+        return Path(basedir).joinpath(date.strftime("%Y-%m-%d"))
+
+    @classmethod
+    def get_filename(cls):
+        return cls.name + cls.format
 
     @classmethod
     def extract_data(cls, filepath):
@@ -136,3 +158,7 @@ class Rule(ABC):
         """
         raise NotImplementedError
         return ""
+
+    @classmethod
+    def save_document(cls, date):
+        raise NotImplementedError

@@ -28,5 +28,20 @@
             "cwd": "${workspaceFolder}/",
             "console": "integratedTerminal"
         },
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Downloader",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/",
+            "program": "${workspaceFolder}/europarl/eurocli.py",
+            "args": [
+                "download",
+                "sessions",
+                "'./data'",
+                "--backfill",
+                "-r protocol_en_html"
+            ]
+        }
     ]
 }
