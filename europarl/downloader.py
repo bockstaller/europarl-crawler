@@ -111,8 +111,9 @@ def rewrite_links(html, base_url):
     links = soup.find_all(href=True)
     for link in links:
         if not bool(urllib.parse.urlparse(link.attrs["href"]).netloc):
-            new_url = urllib.parse.urljoin(base_url, link.attrs["href"])
-            link.attrs["href"] = new_url
+            if not link.attrs["href"][0] == "#":
+                new_url = urllib.parse.urljoin(base_url, link.attrs["href"])
+                link.attrs["href"] = new_url
 
     sources = soup.findAll("script", {"src": True})
     for src in sources:
