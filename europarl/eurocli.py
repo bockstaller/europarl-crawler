@@ -285,15 +285,13 @@ cli.add_command(download)
     help="Select session documents to download. Use rulenames",
 )
 @click.option(
-    "-b",
-    "--backfill",
-    is_flag=True,
+    "--backfill/--no-backfill",
+    default=False,
     help="Backfill older documents by using a not yet seen date.",
 )
 @click.option(
-    "-b",
-    "--refresh",
-    is_flag=True,
+    "--refresh/--no-refresh",
+    default=False,
     help="Refresh older documents using an exponential backoff.",
 )
 @click.argument(
@@ -316,7 +314,6 @@ def download_sessions(rule, backfill, refresh, date, retry, sleep, directory):
             logger.info(
                 "Using {} as backfilling date".format(date.strftime("%Y-%m-%d"))
             )
-            return
 
     if refresh:
         dates = spaced_out_dates(date)

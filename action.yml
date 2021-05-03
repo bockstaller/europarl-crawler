@@ -13,9 +13,11 @@ inputs:
   backfill:
     description: "Should data be backfilled by adding dates in the past?"
     required: false
+    default: "--no-backfill"
   refresh:
     description: "Should data in the recent past be refreshed?"
     required: false
+    default: "--no-refresh"
   rules:
     description: "Rules to download"
     default: '-r "session_day" '

@@ -10,5 +10,5 @@ jobs:
         with:
           document-type: "sessions"
           directory: "."
-          backfill: "--backfill"
+          refresh: "--refresh"
           rules: "-r protocol_en_html"
