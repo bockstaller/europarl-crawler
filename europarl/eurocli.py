@@ -282,7 +282,6 @@ cli.add_command(download)
     "--rule",
     "-r",
     help="Select session documents to download. Use rulenames",
-    multiple=True,
 )
 @click.option(
     "-b",
@@ -298,7 +297,6 @@ cli.add_command(download)
 @click.option("-d", "--date", help="Date to download documents for")
 def download_sessions(rule, backfill, date, retry, sleep, directory):
     if not date:
-
         date = datetime.date.today()
         logger.info(
             "No date provided. Using today: {}".format(date.strftime("%Y-%m-%d"))
@@ -315,7 +313,7 @@ def download_sessions(rule, backfill, date, retry, sleep, directory):
         )
     )
 
-    rulelist = [r.strip() for r in rule]
+    rulelist = [r.strip() for r in rule.split()]
 
     logger.info("Using the following rules: {}".format(rulelist))
 
