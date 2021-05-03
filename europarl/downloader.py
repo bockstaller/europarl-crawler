@@ -110,8 +110,15 @@ def rewrite_links(html, base_url):
     soup = bs4.BeautifulSoup(html, "lxml")
     links = soup.find_all(href=True)
     for link in links:
-        new_url = urllib.parse.urljoin(base_url, link.attrs["href"])
-        link.attrs["href"] = new_url
+        if not bool(urllib.parse.urlparse(link.attrs["href"]).netloc):
+            new_url = urllib.parse.urljoin(base_url, link.attrs["href"])
+            link.attrs["href"] = new_url
+
+    sources = soup.findAll("script", {"src": True})
+    for src in sources:
+        if not bool(urllib.parse.urlparse(src.attrs["src"]).netloc):
+            new_url = urllib.parse.urljoin(base_url, src.attrs["src"])
+            src.attrs["src"] = new_url
 
     return str(soup)
 
