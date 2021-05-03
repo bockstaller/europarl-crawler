@@ -86,6 +86,7 @@ def scrape_document(basedir, rule, date, session, retry=3, sleep=3):
                 allow_redirects=True,
                 timeout=sleep,
             )
+            resp.raise_for_status()
 
             if resp.status_code == 200:
                 logger.debug("{}: Success".format(date.strftime("%Y-%m-%d")))
@@ -95,15 +96,22 @@ def scrape_document(basedir, rule, date, session, retry=3, sleep=3):
         except requests.exceptions.ReadTimeout:
             time.sleep(sleep)
 
+        except requests.exceptions.HTTPError:
+            logger.error("File {} not found".format(url))
+            time.sleep(sleep)
+            return
+
     if rule.format == ".html":
         html = rewrite_links(html=resp.text, base_url=rules.BASE_URL)
         logger.debug("{}: Links rewrote".format(date.strftime("%Y-%m-%d")))
+        filepath = rule.store_document(basedir, date, html)
+    else:
+        filepath = rule.store_document(basedir, date, resp.content)
 
-    filepath = rule.store_document(basedir, date, html)
     logger.debug("{}: File saved: {}".format(date.strftime("%Y-%m-%d"), filepath))
 
-    time.sleep(sleep)
     logger.debug("{}: Sleeping".format(date.strftime("%Y-%m-%d")))
+    time.sleep(sleep)
 
 
 def rewrite_links(html, base_url):
