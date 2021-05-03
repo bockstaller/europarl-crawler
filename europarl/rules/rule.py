@@ -96,12 +96,16 @@ class Rule(ABC):
             )
 
     @classmethod
-    def store_document(cls, basedir, date, html):
+    def store_document(cls, basedir, date, content):
         dirpath = cls.get_filepath(basedir, date)
         dirpath.mkdir(parents=True, exist_ok=True)
         filepath = dirpath.joinpath(cls.get_filename())
-        with filepath.open(mode="w") as f:
-            f.write(html)
+        if type(content) == str:
+            with filepath.open(mode="w") as f:
+                f.write(content)
+        else:
+            with filepath.open(mode="wb") as f:
+                f.write(content)
         return filepath
 
     @classmethod

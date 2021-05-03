@@ -50,44 +50,22 @@ class NamedVotingRule(Rule):
 
 
 @rule_registry
-class NamedVotingEnPdfRule(NamedVotingRule):
+class NamedVotingFrPdfRule(NamedVotingRule):
     """
     Manages named voting documents in English as PDF files
     """
 
-    name = "named_voting_en_pdf"
-    format = ".pdf"
-    language = "EN"
+    name = "named_voting_fr_pdf"
+    format = ".xml"
+    language = "FR"
 
 
 @rule_registry
-class NamedVotingDePdfRule(NamedVotingRule):
-    """
-    Manages named voting documents in German as PDF files
-    """
-
-    name = "named_overview_de_pdf"
-    format = ".pdf"
-    language = "DE"
-
-
-@rule_registry
-class NamedVotingEnHtmlRule(NamedVotingRule):
+class NamedVotingFrXMLRule(NamedVotingRule):
     """
     Manages named voting documents in English as HTML files
     """
 
-    name = "named_voting_en_html"
-    format = ".html"
-    language = "EN"
-
-
-@rule_registry
-class NamedVotingDeHtmlRule(NamedVotingRule):
-    """
-    Manages named voting documents in German as HTML files
-    """
-
-    name = "named_overview_de_html"
-    format = ".html"
-    language = "DE"
+    name = "named_voting_fr_xml"
+    format = ".xml"
+    language = "FR"
