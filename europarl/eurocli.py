@@ -3,6 +3,7 @@
 import datetime
 import json
 import logging
+import os
 import traceback
 
 import click
@@ -16,7 +17,7 @@ import europarl.jobs.indexer as ep_indexer
 import europarl.jobs.postprocessor as ep_postprocessor
 from europarl import configuration, rules
 from europarl.db import DBInterface, Documents, Rules, create_table_structure
-from europarl.downloader import download_all_docs, spaced_out_dates
+from europarl.downloader import download_all_docs, get_unviewed_date, spaced_out_dates
 from europarl.elasticinterface import create_index, get_current_index, index_documents
 
 logger = logging.getLogger("eurocli")
@@ -287,7 +288,13 @@ cli.add_command(download)
     "-b",
     "--backfill",
     is_flag=True,
-    help="Backfill older documents using an exponential backoff.",
+    help="Backfill older documents by using a not yet seen date.",
+)
+@click.option(
+    "-b",
+    "--refresh",
+    is_flag=True,
+    help="Refresh older documents using an exponential backoff.",
 )
 @click.argument(
     "directory",
@@ -295,14 +302,23 @@ cli.add_command(download)
 @click.option("--retry", default=3, help="Number of retries per document")
 @click.option("--sleep", default=3, help="Wait time between document downloads")
 @click.option("-d", "--date", help="Date to download documents for")
-def download_sessions(rule, backfill, date, retry, sleep, directory):
+def download_sessions(rule, backfill, refresh, date, retry, sleep, directory):
     if not date:
         date = datetime.date.today()
-        logger.info(
-            "No date provided. Using today: {}".format(date.strftime("%Y-%m-%d"))
-        )
+        logger.info("No date provided. Using {}".format(date.strftime("%Y-%m-%d")))
 
     if backfill:
+        date = get_unviewed_date(directory=directory, date=date)
+        if date is None:
+            logger.info("No date for backfilling found. Aborting")
+            return
+        else:
+            logger.info(
+                "Using {} as backfilling date".format(date.strftime("%Y-%m-%d"))
+            )
+            return
+
+    if refresh:
         dates = spaced_out_dates(date)
     else:
         dates = [date]
@@ -326,6 +342,18 @@ def download_sessions(rule, backfill, date, retry, sleep, directory):
                 retry=retry,
                 sleep=sleep,
             )
+
+            if backfill:
+                ledger = os.path.join(directory, "backfilled_dates.txt")
+                with open(ledger, mode="r+") as f:
+                    backfilled_dates = [line.strip() for line in f if line]
+                    if date.strftime("%Y-%m-%d") not in backfilled_dates:
+                        f.write(date.strftime("%Y-%m-%d") + "\n")
+                        logger.debug(
+                            "Adding new date {} to backfilled dates protocol".format(
+                                date.strftime("%Y-%m-%d")
+                            )
+                        )
 
         except Exception as e:
             logger.error(e, exc_info=True)

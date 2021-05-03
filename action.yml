@@ -12,8 +12,10 @@ inputs:
     required: true
   backfill:
     description: "Should data be backfilled by adding dates in the past?"
-    default: " "
-    required: true
+    required: false
+  refresh:
+    description: "Should data in the recent past be refreshed?"
+    required: false
   rules:
     description: "Rules to download"
     default: '-r "session_day" '
@@ -28,6 +30,7 @@ runs:
     - ${{inputs.document-type}}
     - ${{inputs.directory}}
     - ${{inputs.backfill}}
+    - ${{inputs.refresh}}
     - ${{inputs.rules}}
     - "-v"
     - DEBUG

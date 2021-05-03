@@ -1,7 +1,9 @@
 import datetime
 import logging
+import os
 import time
 import urllib
+from pathlib import Path
 
 import bs4
 import requests
@@ -9,6 +11,29 @@ import requests
 from europarl import rules
 
 logger = logging.getLogger("eurocli")
+
+
+def get_unviewed_date(directory, date):
+    ledger = os.path.join(directory, "backfilled_dates.txt")
+
+    myfile = Path(ledger)
+    myfile.touch(exist_ok=True)
+
+    with open(ledger, mode="r+") as f:
+        backfilled_dates = [line.strip() for line in f if line]
+
+    sdate = date
+    edate = datetime.date(1979, 7, 1)
+    delta = sdate - edate
+
+    for i in range(delta.days + 1):
+        day = sdate - datetime.timedelta(days=i)
+        if day.strftime("%Y-%m-%d") in backfilled_dates:
+            next
+        else:
+            return day
+
+    return None
 
 
 def spaced_out_dates(date):
