@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import traceback
+from pathlib import Path
 
 import click
 import click_log
@@ -301,6 +302,8 @@ cli.add_command(download)
 @click.option("--sleep", default=3, help="Wait time between document downloads")
 @click.option("-d", "--date", help="Date to download documents for")
 def download_sessions(rule, backfill, refresh, date, retry, sleep, directory):
+    Path(directory).mkdir(parents=True, exist_ok=True)
+
     if not date:
         date = datetime.date.today()
         logger.info("No date provided. Using {}".format(date.strftime("%Y-%m-%d")))
