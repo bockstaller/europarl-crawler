@@ -129,6 +129,12 @@ def rewrite_links(html, base_url):
             new_url = urllib.parse.urljoin(base_url, src.attrs["src"])
             src.attrs["src"] = new_url
 
+    imgs = soup.findAll("img", {"src": True})
+    for img in imgs:
+        if not bool(urllib.parse.urlparse(img.attrs["src"]).netloc):
+            new_url = urllib.parse.urljoin(base_url, img.attrs["src"])
+            img.attrs["src"] = new_url
+
     return str(soup)
 
 
@@ -163,3 +169,18 @@ def download_all_docs(basedir, rulenames, date, retry, sleep):
                 )
 
     return
+
+
+def batch_rewrite_link(base_dir):
+    for root, dirs, files in os.walk(base_dir):
+        for file in files:
+            print(file)
+            if file.endswith(".html"):
+                path = os.path.join(root, file)
+                print(path)
+                with open(path, "r") as infile:
+                    data = rewrite_links(
+                        infile, "https://europarl.europa.eu/doceo/document/"
+                    )
+                with open(path, "w") as outfile:
+                    outfile.write(data)
